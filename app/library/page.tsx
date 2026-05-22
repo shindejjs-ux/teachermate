@@ -11,7 +11,7 @@ export default function LibraryPage() {
         </h1>
 
         <a
-          href="/pdfs/class9/maths9/ch1.pdf"
+          href="https://drive.google.com/file/d/1nNKlhHLZOm5rTzDwTI0RatpFsRJ-aa_j/preview"
           target="_blank"
           className="bg-indigo-600 text-white px-4 py-2 rounded-xl"
         >
