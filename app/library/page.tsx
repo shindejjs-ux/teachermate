@@ -3,9 +3,37 @@ import Sidebar from "../../components/Sidebar";
 export default function LibraryPage() {
   const books = [
     {
-      title: "Class 9 Maths",
-      link: "https://drive.google.com/file/d/1zdg6Qu0vPLrdwS5w_gHJiXo0C8vSKetf/preview",
-    },
+  title: "Class 9 Maths - Chapter 1",
+  link: "https://drive.google.com/file/d/1nNKlhHLZOm5rTzDwTI0RatpFsRJ-aa_j/preview"
+},
+{
+  title: "Class 9 Maths - Chapter 2",
+  link: "https://drive.google.com/file/d/1BNXy9eEUNV1OxVrpuhwM8WIwuMS0HaYC/preview",
+},
+{
+  title: "Class 9 Maths - Chapter 3",
+  link: "https://drive.google.com/file/d/1FQSlleeDWQmI2ZJHOMmpvwVk3k8xVBuX/preview",
+},
+{
+  title: "Class 9 Maths - Chapter 4",
+  link: "https://drive.google.com/file/d/1v3h_t0BbeNrfD_MLr1KMLAekvNfLy6ne/preview",
+},
+{
+  title: "Class 9 Maths - Chapter 5",
+  link: "https://drive.google.com/file/d/1Fnpo_R792MG-hw_eLgBpqypjq5P_kOMH/preview",
+},
+{
+  title: "Class 9 Maths - Chapter 6",
+  link: "https://drive.google.com/file/d/1e6WxOLxmryjdpZtaCcYIjhA88UkCnXi0/preview",
+},
+{
+  title: "Class 9 Maths - Chapter 7",
+  link: "https://drive.google.com/file/d/1kjEOpOslG7qnniWBHjEPMKU9qx4drj3s/preview",
+},
+{
+  title: "Class 9 Maths - Chapter 8",
+  link: "https://drive.google.com/file/d/10R76JmS3Jk8gO1a2p6_OqLFPY4ZJ904d/preview",
+},
 
     {
       title: "Class 10 Science",
