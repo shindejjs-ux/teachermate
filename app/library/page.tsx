@@ -44,6 +44,14 @@ export default function LibraryPage() {
       title: "Class 11 Physics",
       link: "https://drive.google.com/file/d/1zdg6Qu0vPLrdwS5w_gHJiXo0C8vSKetf/preview",
     },
+    {
+      title: "Class 12 Mathematics - Chapter  1",
+      link: "https://drive.google.com/file/d/1nEWV0qdfBC5Kmu_c631dQxDVWsLSnocj/preview",
+    },
+    {
+      title: "Class 12 Mathematics - Chapter  2",
+      link: "https://drive.google.com/file/d/1xF5phv55NaQPR8YZEUIFZrXjHCQh7hMw/preview",
+    },
   ];
 
   return (
