@@ -58,31 +58,26 @@ export default function LibraryPage() {
     <div className="flex">
       <Sidebar />
 
-      <div className="flex-1 p-10 bg-gray-100 min-h-screen">
-        <h1 className="text-4xl font-bold text-indigo-700 mb-10">
-          Digital Library
-        </h1>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {books.map((book, index) => (
+          <div
+            key={index}
+            className="bg-white p-8 rounded-2xl shadow-xl hover:scale-105 transition"
+          >
+            <h2 className="text-2xl font-bold text-indigo-700 mb-2">
+              {book.title}
+            </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {books.map((book, index) => (
-            <div
-              key={index}
-              className="bg-white p-8 rounded-2xl shadow-xl hover:scale-105 transition"
+            <a
+              href={book.link}
+              target="_blank"
+              rel="noreferrer"
+              className="bg-indigo-600 text-white px-6 py-3 rounded-xl"
             >
-              <h2 className="text-2xl font-semibold mb-6">
-                {book.title}
-              </h2>
-
-              <a
-                href={book.link}
-                target="_blank"
-                className="bg-indigo-600 text-white px-6 py-3 rounded-xl"
-              >
-                Open PDF
-              </a>
-            </div>
-          ))}
-        </div>
+              Open PDF
+            </a>
+          </div>
+        ))}
       </div>
     </div>
   );
