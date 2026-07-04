@@ -1,5 +1,5 @@
 "use client";
-
+import { getChapters } from "../../lib/curriculum/curriculumService";
 import { useState } from "react";
 
 export default function LessonPlansPage() {
