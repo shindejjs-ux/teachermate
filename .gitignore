@@ -1,9 +1,22 @@
-node_modules
-.next
-out
-dist
-build
+# Dependencies
+node_modules/
 
-*.pdf
+# Next.js
+.next/
+out/
+dist/
+build/
 
+# Environment
 .env
+.env.local
+.env.*
+
+# Build cache
+*.tsbuildinfo
+
+# Archives
+*.zip
+
+# Documents (optional)
+*.pdf
