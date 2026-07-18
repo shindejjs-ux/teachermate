@@ -1,82 +1,53 @@
 "use client";
 
 import { useState } from "react";
-
-import {
-  getAuth,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-} from "firebase/auth";
-
-import app from "../../lib/firebase";
-
-const auth = getAuth(app);
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  const supabase = createClient();
+  const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const signup = async () => {
-    try {
-      await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+  async function signIn() {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-      alert("Signup Successful!");
-    } catch (error: any) {
+    if (error) {
       alert(error.message);
+      return;
     }
-  };
 
-  const login = async () => {
-    try {
-      await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-
-      alert("Login Successful!");
-    } catch (error: any) {
-      alert(error.message);
-    }
-  };
+    router.push("/dashboard");
+  }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="bg-white p-10 rounded-2xl shadow-xl w-full max-w-md">
-        <h1 className="text-4xl font-bold text-indigo-700 mb-8">
-          Teacher Login
+    <div className="min-h-screen flex items-center justify-center bg-indigo-50">
+      <div className="bg-white p-8 rounded-xl shadow-lg w-96">
+        <h1 className="text-3xl font-bold mb-6 text-center">
+          TeacherMate Login
         </h1>
 
         <input
-          type="email"
+          className="border p-3 rounded w-full mb-4"
           placeholder="Email"
-          className="w-full p-4 border rounded-xl mb-4"
-          value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
 
         <input
-          type="password"
+          className="border p-3 rounded w-full mb-6"
           placeholder="Password"
-          className="w-full p-4 border rounded-xl mb-6"
-          value={password}
+          type="password"
           onChange={(e) => setPassword(e.target.value)}
         />
 
         <button
-          onClick={signup}
-          className="w-full bg-green-600 text-white p-4 rounded-xl mb-4"
-        >
-          Sign Up
-        </button>
-
-        <button
-          onClick={login}
-          className="w-full bg-indigo-600 text-white p-4 rounded-xl"
+          onClick={signIn}
+          className="bg-indigo-600 text-white w-full p-3 rounded-lg"
         >
           Login
         </button>

@@ -1,167 +1,205 @@
 "use client";
 
 import { useState } from "react";
-import Sidebar from "@/components/layout/Sidebar";
+import jsPDF from "jspdf";
+export default function QuestionPaperPage() {function downloadPDF(){
 
-export default function QuestionPaperPage() {
-  const [selectedClass, setSelectedClass] = useState("Class 9");
-  const [subject, setSubject] = useState("Mathematics");
+  const doc = new jsPDF();
+
+
+  doc.setFontSize(16);
+
+  doc.text(
+    "THE ADITYA BIRLA PUBLIC SCHOOL, RENUKOOT",
+    10,
+    20
+  );
+
+
+  doc.setFontSize(12);
+
+
+  const lines =
+    doc.splitTextToSize(
+      paper,
+      180
+    );
+
+
+  doc.text(
+    lines,
+    10,
+    35
+  );
+
+
+  doc.save(
+    "CBSE_Question_Paper.pdf"
+  );
+
+}
+  const [className, setClassName] = useState("");
+  const [subject, setSubject] = useState("");
   const [chapter, setChapter] = useState("");
-  const [paperType, setPaperType] = useState("Unit Test");
-  const [difficulty, setDifficulty] = useState("Moderate");
+  const [marks, setMarks] = useState("40");
+  const [difficulty, setDifficulty] = useState("Medium");
+
+  const [paper, setPaper] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function generatePaper() {
+    if (!className || !subject || !chapter) {
+      alert("Please fill all fields.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch("/api/question-paper", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          className,
+          subject,
+          chapter,
+          marks,
+          difficulty,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setPaper(data.paper);
+      } else {
+        alert("Generation failed.");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Something went wrong.");
+    }
+
+    setLoading(false);
+  }
 
   return (
-    <div className="flex min-h-screen bg-slate-100">
-      <Sidebar />
+    <div className="space-y-8">
 
-      <main className="flex-1 p-8">
-
-        <h1 className="text-4xl font-bold text-indigo-700">
+      <div>
+        <h1 className="text-4xl font-bold text-slate-800">
           📝 AI Question Paper Generator
         </h1>
 
-        <p className="text-gray-600 mt-2 mb-8">
-          Create CBSE competency-based question papers within seconds.
+        <p className="text-slate-500 mt-2">
+          Generate CBSE Question Papers instantly.
         </p>
+      </div>
 
-        <div className="bg-white rounded-3xl shadow-xl p-8">
+      <div className="bg-white rounded-2xl shadow p-6 space-y-5">
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 gap-5">
 
-            <div>
-              <label className="block font-semibold mb-2">
-                Class
-              </label>
-
-              <select
-                value={selectedClass}
-                onChange={(e) => setSelectedClass(e.target.value)}
-                className="w-full border rounded-xl p-3"
-              >
-                <option>Class 6</option>
-                <option>Class 7</option>
-                <option>Class 8</option>
-                <option>Class 9</option>
-                <option>Class 10</option>
-                <option>Class 11</option>
-                <option>Class 12</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block font-semibold mb-2">
-                Subject
-              </label>
-
-              <input
-                className="w-full border rounded-xl p-3"
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <label className="block font-semibold mb-2">
-                Chapter
-              </label>
-
-              <input
-                className="w-full border rounded-xl p-3"
-                placeholder="Enter Chapter Name"
-                value={chapter}
-                onChange={(e) => setChapter(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <label className="block font-semibold mb-2">
-                Paper Type
-              </label>
-
-              <select
-                value={paperType}
-                onChange={(e) => setPaperType(e.target.value)}
-                className="w-full border rounded-xl p-3"
-              >
-                <option>Unit Test</option>
-                <option>Periodic Test</option>
-                <option>Half Yearly</option>
-                <option>Annual Exam</option>
-                <option>Sample Paper</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block font-semibold mb-2">
-                Difficulty
-              </label>
-
-              <select
-                value={difficulty}
-                onChange={(e) => setDifficulty(e.target.value)}
-                className="w-full border rounded-xl p-3"
-              >
-                <option>Easy</option>
-                <option>Moderate</option>
-                <option>Tough</option>
-              </select>
-            </div>
-
-          </div>
-
-          <button
-            className="mt-8 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-xl font-semibold transition shadow-lg"
+          <select
+            className="border rounded-xl p-3"
+            value={className}
+            onChange={(e)=>setClassName(e.target.value)}
           >
-            🚀 Generate Question Paper
-          </button>
+            <option value="">Select Class</option>
+            <option>Class 6</option>
+            <option>Class 7</option>
+            <option>Class 8</option>
+            <option>Class 9</option>
+            <option>Class 10</option>
+            <option>Class 11</option>
+            <option>Class 12</option>
+          </select>
+
+          <select
+            className="border rounded-xl p-3"
+            value={subject}
+            onChange={(e)=>setSubject(e.target.value)}
+          >
+            <option value="">Select Subject</option>
+            <option>Mathematics</option>
+            <option>Physics</option>
+            <option>Chemistry</option>
+            <option>Biology</option>
+            <option>English</option>
+          </select>
+
+          <input
+            className="border rounded-xl p-3"
+            placeholder="Chapter"
+            value={chapter}
+            onChange={(e)=>setChapter(e.target.value)}
+          />
+
+          <select
+            className="border rounded-xl p-3"
+            value={marks}
+            onChange={(e)=>setMarks(e.target.value)}
+          >
+            <option>20</option>
+            <option>40</option>
+            <option>50</option>
+            <option>80</option>
+          </select>
+
+          <select
+            className="border rounded-xl p-3"
+            value={difficulty}
+            onChange={(e)=>setDifficulty(e.target.value)}
+          >
+            <option>Easy</option>
+            <option>Medium</option>
+            <option>Hard</option>
+          </select>
 
         </div>
 
-        <div className="bg-white rounded-3xl shadow-xl p-8 mt-8">
+        <button
+          onClick={generatePaper}
+          disabled={loading}
+          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl"
+        >
+          {loading ? "Generating..." : "Generate Question Paper"}
+        </button>
 
-          <h2 className="text-2xl font-bold text-indigo-700 mb-6">
-            Generated Paper Preview
+      </div>
+
+      {paper && (
+        <div className="bg-white rounded-2xl shadow p-6">
+
+          <h2 className="text-2xl font-bold mb-4">
+            Generated Question Paper
           </h2>
 
-          <div className="border rounded-2xl p-6 bg-gray-50">
+          <pre className="whitespace-pre-wrap">
+ {paper}
+</pre>
 
-            <h3 className="text-center text-xl font-bold">
-              Question Paper
-            </h3>
 
-            <div className="grid md:grid-cols-2 gap-4 mt-6">
-
-              <div>
-                <strong>Class:</strong> {selectedClass}
-              </div>
-
-              <div>
-                <strong>Subject:</strong> {subject}
-              </div>
-
-              <div>
-                <strong>Chapter:</strong> {chapter || "Not Selected"}
-              </div>
-
-              <div>
-                <strong>Paper Type:</strong> {paperType}
-              </div>
-
-              <div>
-                <strong>Difficulty:</strong> {difficulty}
-              </div>
-
-            </div>
-
-            <div className="mt-8 rounded-xl border border-dashed border-gray-300 p-10 text-center text-gray-500">
-              AI-generated CBSE question paper will appear here.
-            </div>
-
-          </div>
+<button
+onClick={downloadPDF}
+className="
+mt-6
+bg-green-600
+hover:bg-green-700
+text-white
+px-6
+py-3
+rounded-xl
+"
+>
+Download PDF
+</button>
 
         </div>
+      )}
 
-      </main>
     </div>
   );
 }

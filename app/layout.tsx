@@ -1,8 +1,9 @@
 import "./globals.css";
-// import Sidebar from "@/components/Sidebar";
-
+import Sidebar from "@/components/Sidebar";
+import Header from "@/components/Header";
 export const metadata = {
-  title: "TeacherMate",
+  title: "TeacherMate AI",
+  description: "AI Powered Teaching Platform",
 };
 
 export default function RootLayout({
@@ -12,18 +13,26 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
+      <body className="bg-slate-100">
+        <div className="flex min-h-screen">
 
-        <div className="flex">
+          {/* Sidebar */}
+          <Sidebar />
 
-          {/* <Sidebar /> */}
+          {/* Main Content */}
+          <div className="flex-1 ml-72 flex flex-col">
 
-          <main className="w-full p-6">
-            {children}
-          </main>
+            {/* Header */}
+            <Header />
+
+            {/* Page Content */}
+            <main className="flex-1 p-8 overflow-y-auto">
+              {children}
+            </main>
+
+          </div>
 
         </div>
-
       </body>
     </html>
   );

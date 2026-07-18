@@ -1,104 +1,140 @@
 "use client";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+export default function ChapterHub() {
+  const [boards, setBoards] = useState<any[]>([]);
+  const [classes, setClasses] = useState<any[]>([]);
+  const [subjects, setSubjects] = useState<any[]>([]);
+  const [chapters, setChapters] = useState<any[]>([]);
 
-import { useParams } from "next/navigation";
-import { useState } from "react";
-import { classes } from "@/lib/data/classes";
-import { subjects } from "@/lib/data/subjects";
-import { getChapters } from "@/lib/curriculum/curriculumService";
+  const [selectedBoard, setSelectedBoard] = useState<number | null>(null);
+  const [selectedClass, setSelectedClass] = useState<number | null>(null);
+  const [selectedSubject, setSelectedSubject] = useState<number | null>(null);
 
-export default function ChapterHubPage() {
-  const [selectedClass, setSelectedClass] = useState<keyof typeof subjects | "">("");
-  const [selectedSubject, setSelectedSubject] = useState("");
+  useEffect(() => {
+    loadBoards();
+  }, []);
 
+  async function loadBoards() {
+    const { data } = await supabase.from("boards").select("*");
+    setBoards(data || []);
+  }
+
+  async function loadClasses(boardId: number) {
+    setSelectedBoard(boardId);
+    const { data } = await supabase
+      .from("classes")
+      .select("*")
+      .eq("board_id", boardId);
+
+    setClasses(data || []);
+    setSubjects([]);
+    setChapters([]);
+  }
+
+  async function loadSubjects(classId: number) {
+    setSelectedClass(classId);
+
+    const { data } = await supabase
+      .from("subjects")
+      .select("*")
+      .eq("class_id", classId);
+
+    setSubjects(data || []);
+    setChapters([]);
+  }
+
+  async function loadChapters(subjectId: number) {
+  setSelectedSubject(subjectId);
+
+  const { data: books } = await supabase
+    .from("books")
+    .select("id")
+    .eq("subject_id", subjectId);
+
+  if (!books || books.length === 0) {
+    setChapters([]);
+    return;
+  }
+
+  const { data } = await supabase
+    .from("chapters")
+    .select("*")
+    .eq("book_id", books[0].id)
+    .order("chapter_no");
+
+  setChapters(data || []);
+}
   return (
     <div className="p-8">
-      <h1 className="text-3xl font-bold mb-6">
+      <h1 className="text-4xl font-bold text-indigo-700 mb-8">
         Chapter Hub
       </h1>
 
-      {/* STEP 1 - CLASS */}
-      {!selectedClass && (
+      <div className="grid md:grid-cols-4 gap-6">
+
         <div>
-          <h2 className="text-xl font-semibold mb-4">
-            Select Class
-          </h2>
+          <h2 className="font-bold mb-3">Boards</h2>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {classes.map((cls) => (
-              <button
-                key={cls}
-                onClick={() => setSelectedClass(cls as keyof typeof subjects)}
-                className="p-6 bg-white rounded-2xl shadow-md border hover:shadow-xl hover:scale-105 transition-all duration-200 text-left"
-              >
-                <div className="text-2xl font-bold text-indigo-600">
-                  {cls}
-                </div>
-                <div className="text-sm text-gray-500 mt-1">
-                  Tap to open
-                </div>
-              </button>
-            ))}
-          </div>
+          {boards.map((board) => (
+            <button
+              key={board.id}
+              onClick={() => loadClasses(board.id)}
+              className="block w-full mb-2 p-3 bg-indigo-100 rounded-lg"
+            >
+              {board.name}
+            </button>
+          ))}
         </div>
-      )}
 
-      {/* STEP 2 - SUBJECT */}
-      {selectedClass && !selectedSubject && (
         <div>
-          <h2 className="text-xl font-semibold mb-4">
-            Select Subject ({selectedClass})
-          </h2>
+          <h2 className="font-bold mb-3">Classes</h2>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {subjects[selectedClass]?.map((subj) => (
-              <button
-  key={subj}
-  onClick={() => setSelectedSubject(subj)}
-  className="p-6 bg-white rounded-2xl shadow-md border hover:shadow-xl hover:bg-green-50 transition-all text-left"
->
-  <div className="text-xl font-semibold">
-    {subj}
-  </div>
-  <div className="text-sm text-gray-500 mt-1">
-    Subject Content
-  </div>
-</button>
-            ))}
-          </div>
-
-          <button
-            onClick={() => setSelectedClass("")}
-            className="mt-4 text-sm text-blue-600"
-          >
-            ← Back
-          </button>
+          {classes.map((cls) => (
+            <button
+              key={cls.id}
+              onClick={() => loadSubjects(cls.id)}
+              className="block w-full mb-2 p-3 bg-blue-100 rounded-lg"
+            >
+              {cls.class_name}
+            </button>
+          ))}
         </div>
-      )}
 
-      {/* STEP 3 - CHAPTERS */}
-      {selectedClass && selectedSubject && (
         <div>
-          <h2 className="text-xl font-semibold mb-4">
-            Chapters ({selectedClass} - {selectedSubject})
-          </h2>
+          <h2 className="font-bold mb-3">Subjects</h2>
 
-          <div className="grid gap-4">
-            {getChapters(selectedClass, selectedSubject).map(
-              (ch: any) => (
-                <div
-                  key={ch.chapterNo}
-                  className="p-4 bg-white shadow rounded-xl"
-                >
-                  <h3 className="font-bold">
-                    Chapter {ch.chapterNo}
-                  </h3>
-                  <p>{ch.title}</p>
-                </div>
-              )
-            )}
-          </div>
+          {subjects.map((sub) => (
+            <button
+              key={sub.id}
+              onClick={() => loadChapters(sub.id)}
+              className="block w-full mb-2 p-3 bg-green-100 rounded-lg"
+            >
+              {sub.subject_name}
+            </button>
+          ))}
         </div>
-      )}
+
+        <div>
+          <h2 className="font-bold mb-3">Chapters</h2>
+
+          
+          {chapters.map((chapter) => (
+  <Link
+    key={chapter.id}
+    href={`/chapter-hub/${chapter.id}`}
+  >
+    <div className="mb-3 p-4 bg-purple-100 rounded-xl cursor-pointer hover:bg-purple-200 transition">
+      <div className="font-semibold">
+        {chapter.chapter_no}. {chapter.chapter_name}
+      </div>
+    </div>
+  </Link>
+))}
+        </div>
+
+      </div>
     </div>
   );
 }

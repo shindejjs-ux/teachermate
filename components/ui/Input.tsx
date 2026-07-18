@@ -1,12 +1,10 @@
-import { InputHTMLAttributes } from "react";
+type Props = React.InputHTMLAttributes<HTMLInputElement>;
 
-export default function Input(
-  props: InputHTMLAttributes<HTMLInputElement>
-) {
+export default function Input(props: Props) {
   return (
     <input
       {...props}
-      className="w-full border rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none"
+      className="border rounded-lg p-3 w-full"
     />
   );
 }
