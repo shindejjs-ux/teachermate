@@ -1,79 +1,88 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
-
-type Board = {
-  id: number;
-  name: string;
-};
+import { Pencil, Trash2, Plus, Search } from "lucide-react";
 
 type ClassItem = {
   id: number;
-  name: string;
   board_id: number;
-  // Supabase returns related rows as an array
-  boards: {
-    name: string;
-  }[];
+  name: string;
 };
 
 export default function ClassesPage() {
-  const [boards, setBoards] = useState<Board[]>([]);
   const [classes, setClasses] = useState<ClassItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [boardId, setBoardId] = useState("");
-  const [className, setClassName] = useState("");
+  const [search, setSearch] = useState("");
 
-  async function loadBoards() {
-    const { data } = await supabase
-      .from("boards")
+  const [showModal, setShowModal] = useState(false);
+  const [editing, setEditing] = useState<ClassItem | null>(null);
+
+  const [name, setName] = useState("");
+  const [boardId, setBoardId] = useState(1);
+
+  async function loadClasses() {
+    setLoading(true);
+
+    const { data, error } = await supabase
+      .from("classes")
       .select("*")
       .order("id");
 
-    if (data) setBoards(data);
-  }
+    if (!error) {
+      setClasses(data || []);
+    }
 
-  async function loadClasses() {
-    const { data } = await supabase
-      .from("classes")
-      .select(`
-        id,
-        name,
-        board_id,
-        boards(name)
-      `)
-      .order("id");
-
-    if (data) setClasses(data as ClassItem[]);
+    setLoading(false);
   }
 
   useEffect(() => {
-    loadBoards();
     loadClasses();
   }, []);
 
-  async function addClass() {
-    if (!boardId || !className) {
-      alert("Fill all fields");
+  const filtered = useMemo(() => {
+    return classes.filter((c) =>
+      c.name.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [classes, search]);
+
+  function openAdd() {
+    setEditing(null);
+    setName("");
+    setBoardId(1);
+    setShowModal(true);
+  }
+
+  function openEdit(item: ClassItem) {
+    setEditing(item);
+    setName(item.name);
+    setBoardId(item.board_id);
+    setShowModal(true);
+  }
+
+  async function saveClass() {
+    if (!name.trim()) {
+      alert("Enter class name");
       return;
     }
 
-    const { error } = await supabase
-      .from("classes")
-      .insert({
-        board_id: Number(boardId),
-        name: className,
+    if (editing) {
+      await supabase
+        .from("classes")
+        .update({
+          name,
+          board_id: boardId,
+        })
+        .eq("id", editing.id);
+    } else {
+      await supabase.from("classes").insert({
+        name,
+        board_id: boardId,
       });
-
-    if (error) {
-      alert(error.message);
-      return;
     }
 
-    setClassName("");
-    setBoardId("");
-
+    setShowModal(false);
     loadClasses();
   }
 
@@ -89,104 +98,189 @@ export default function ClassesPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="min-h-screen bg-slate-100">
 
-      <div>
+      <div className="bg-indigo-700 text-white p-8 shadow">
+
         <h1 className="text-4xl font-bold">
           Classes
         </h1>
 
-        <p className="text-gray-500">
-          Manage school classes.
+        <p className="opacity-90 mt-2">
+          Manage all CBSE Classes
         </p>
-      </div>
-
-      <div className="bg-white rounded-xl shadow p-6 space-y-4">
-
-        <select
-          className="border rounded-lg p-3 w-full"
-          value={boardId}
-          onChange={(e)=>setBoardId(e.target.value)}
-        >
-          <option value="">Select Board</option>
-
-          {boards.map((board)=>(
-            <option key={board.id} value={board.id}>
-              {board.name}
-            </option>
-          ))}
-
-        </select>
-
-        <input
-          className="border rounded-lg p-3 w-full"
-          placeholder="Class Name"
-          value={className}
-          onChange={(e)=>setClassName(e.target.value)}
-        />
-
-        <button
-          onClick={addClass}
-          className="bg-indigo-600 text-white px-6 py-3 rounded-xl"
-        >
-          Add Class
-        </button>
 
       </div>
 
-      <div className="bg-white rounded-xl shadow overflow-hidden">
+      <div className="p-8">
 
-        <table className="w-full">
+        <div className="flex justify-between mb-6">
 
-          <thead className="bg-gray-100">
+          <div className="relative w-96">
 
-            <tr>
+            <Search
+              className="absolute left-3 top-3 text-gray-500"
+              size={18}
+            />
 
-              <th className="p-4 text-left">ID</th>
-              <th className="p-4 text-left">Board</th>
-              <th className="p-4 text-left">Class</th>
-              <th className="p-4 text-center">Action</th>
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search class..."
+              className="w-full pl-10 pr-4 py-3 rounded-xl border bg-white"
+            />
 
-            </tr>
+          </div>
 
-          </thead>
+          <button
+            onClick={openAdd}
+            className="bg-indigo-600 text-white px-5 py-3 rounded-xl flex gap-2 items-center"
+          >
+            <Plus size={18} />
+            Add Class
+          </button>
 
-          <tbody>
+        </div>
 
-            {classes.map((item)=>(
+        <div className="bg-white rounded-2xl shadow">
 
-              <tr key={item.id} className="border-t">
+          <table className="w-full">
 
-                <td className="p-4">{item.id}</td>
+            <thead>
 
-                <td className="p-4">
-                  {item.boards?.[0]?.name}
-                </td>
+              <tr className="border-b bg-slate-50">
 
-                <td className="p-4">
-                  {item.name}
-                </td>
+                <th className="p-4 text-left">ID</th>
 
-                <td className="p-4 text-center">
+                <th className="p-4 text-left">
+                  Class
+                </th>
 
-                  <button
-                    onClick={()=>deleteClass(item.id)}
-                    className="bg-red-600 text-white px-4 py-2 rounded-lg"
-                  >
-                    Delete
-                  </button>
+                <th className="p-4 text-left">
+                  Board
+                </th>
 
-                </td>
+                <th className="p-4 text-right">
+                  Action
+                </th>
 
               </tr>
 
-            ))}
+            </thead>
 
-          </tbody>
+            <tbody>
 
-        </table>
+              {loading && (
+                <tr>
+                  <td
+                    colSpan={4}
+                    className="p-8 text-center"
+                  >
+                    Loading...
+                  </td>
+                </tr>
+              )}
+
+              {!loading &&
+                filtered.map((item) => (
+                  <tr
+                    key={item.id}
+                    className="border-b hover:bg-slate-50"
+                  >
+                    <td className="p-4">{item.id}</td>
+
+                    <td className="p-4 font-semibold">
+                      {item.name}
+                    </td>
+
+                    <td className="p-4">
+                      {item.board_id}
+                    </td>
+
+                    <td className="p-4">
+
+                      <div className="flex justify-end gap-2">
+
+                        <button
+                          onClick={() => openEdit(item)}
+                          className="p-2 rounded bg-blue-600 text-white"
+                        >
+                          <Pencil size={16} />
+                        </button>
+
+                        <button
+                          onClick={() => deleteClass(item.id)}
+                          className="p-2 rounded bg-red-600 text-white"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+
+                      </div>
+
+                    </td>
+
+                  </tr>
+                ))}
+
+            </tbody>
+
+          </table>
+
+        </div>
 
       </div>
+
+      {showModal && (
+
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+
+          <div className="bg-white w-[420px] rounded-2xl p-6">
+
+            <h2 className="text-2xl font-bold mb-6">
+
+              {editing ? "Edit Class" : "Add Class"}
+
+            </h2>
+
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Class Name"
+              className="border rounded-lg w-full p-3 mb-4"
+            />
+
+            <input
+              type="number"
+              value={boardId}
+              onChange={(e) =>
+                setBoardId(Number(e.target.value))
+              }
+              className="border rounded-lg w-full p-3 mb-6"
+            />
+
+            <div className="flex justify-end gap-3">
+
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-5 py-2 border rounded-lg"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={saveClass}
+                className="bg-indigo-600 text-white px-5 py-2 rounded-lg"
+              >
+                Save
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      )}
 
     </div>
   );

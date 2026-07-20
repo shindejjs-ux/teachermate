@@ -1,66 +1,147 @@
 "use client";
 
 import { useState } from "react";
-import Sidebar from "@/components/layout/Sidebar";
+
+type Question = {
+  question: string;
+  options: string[];
+  answer: number;
+};
 
 export default function QuizGeneratorPage() {
-  const [topic, setTopic] = useState("");
+  const [chapter, setChapter] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const [questions, setQuestions] = useState<Question[]>([]);
+
+  const sampleQuestions: Question[] = [
+    {
+      question: "What is a Rational Number?",
+      options: [
+        "Number of form p/q",
+        "Whole Number",
+        "Natural Number",
+        "Prime Number",
+      ],
+      answer: 0,
+    },
+    {
+      question: "Zero is",
+      options: [
+        "Natural",
+        "Rational",
+        "Prime",
+        "Composite",
+      ],
+      answer: 1,
+    },
+    {
+      question: "5/7 belongs to",
+      options: [
+        "Integers",
+        "Whole Numbers",
+        "Rational Numbers",
+        "Natural Numbers",
+      ],
+      answer: 2,
+    },
+  ];
+
+  async function generateQuiz() {
+    setLoading(true);
+
+    await new Promise((r) => setTimeout(r, 1000));
+
+    setQuestions(sampleQuestions);
+
+    setLoading(false);
+  }
 
   return (
-    <div className="flex">
-      <Sidebar />
+    <div className="min-h-screen bg-gray-100">
 
-      <div className="p-8 flex-1 bg-gray-100 min-h-screen">
-        <h1 className="text-4xl font-bold text-indigo-700 mb-8">
-          Quiz Generator 🧠
+      <div className="bg-pink-700 text-white p-8">
+        <h1 className="text-4xl font-bold">
+          🎯 AI Quiz Generator
         </h1>
 
-        <input
-          type="text"
-          placeholder="Enter Topic..."
-          value={topic}
-          onChange={(e) => setTopic(e.target.value)}
-          className="w-full p-4 rounded-2xl border mb-8"
-        />
-
-        {topic && (
-          <div className="bg-white p-8 rounded-2xl shadow-lg">
-            <h2 className="text-2xl font-bold mb-6">
-              MCQ Quiz on {topic}
-            </h2>
-
-            <div className="space-y-6">
-
-              <div>
-                <p className="font-bold mb-2">
-                  1. What is {topic}?
-                </p>
-
-                <div className="space-y-2">
-                  <p>A. Option 1</p>
-                  <p>B. Option 2</p>
-                  <p>C. Option 3</p>
-                  <p>D. Option 4</p>
-                </div>
-              </div>
-
-              <div>
-                <p className="font-bold mb-2">
-                  2. Practical application of {topic}?
-                </p>
-
-                <div className="space-y-2">
-                  <p>A. Application 1</p>
-                  <p>B. Application 2</p>
-                  <p>C. Application 3</p>
-                  <p>D. Application 4</p>
-                </div>
-              </div>
-
-            </div>
-          </div>
-        )}
+        <p className="mt-2 text-pink-100">
+          Generate quizzes instantly.
+        </p>
       </div>
+
+      <div className="max-w-6xl mx-auto p-8">
+
+        <div className="bg-white rounded-2xl shadow-lg p-8">
+
+          <label className="font-bold">
+            Chapter Name
+          </label>
+
+          <input
+            value={chapter}
+            onChange={(e) => setChapter(e.target.value)}
+            placeholder="Enter Chapter"
+            className="w-full border rounded-lg p-3 mt-2"
+          />
+
+          <button
+            onClick={generateQuiz}
+            disabled={loading}
+            className="mt-6 bg-pink-600 hover:bg-pink-700 text-white px-8 py-3 rounded-xl font-bold"
+          >
+            {loading ? "Generating..." : "Generate Quiz"}
+          </button>
+
+        </div>
+
+        {questions.length > 0 && (
+
+          <div className="mt-8 space-y-6">
+
+            {questions.map((q, i) => (
+
+              <div
+                key={i}
+                className="bg-white rounded-2xl shadow-lg p-6"
+              >
+
+                <h2 className="font-bold text-xl">
+                  Q{i + 1}. {q.question}
+                </h2>
+
+                <div className="mt-4 space-y-3">
+
+                  {q.options.map((op, index) => (
+
+                    <label
+                      key={index}
+                      className="flex items-center gap-3 border rounded-lg p-3 cursor-pointer hover:bg-gray-100"
+                    >
+
+                      <input
+                        type="radio"
+                        name={`q${i}`}
+                      />
+
+                      {op}
+
+                    </label>
+
+                  ))}
+
+                </div>
+
+              </div>
+
+            ))}
+
+          </div>
+
+        )}
+
+      </div>
+
     </div>
   );
 }
