@@ -280,12 +280,19 @@ export default function ChapterPage() {
                   <div className="flex gap-3">
 
                     <Link
-                      href={`/pdf-viewer?file=${encodeURIComponent(
-                        getFileUrl(resource, chapterId)
-                      )}`}
+  href={`/pdf-viewer?url=${encodeURIComponent(
+    getFileUrl(resource, chapterId)
+  )}`}
                       className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-semibold"
                     >
-                      📖 Read
+                      <a
+  href={getFileUrl(resource, chapterId)}
+  target="_blank"
+  rel="noopener noreferrer"
+  className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-semibold"
+>
+  📖 Read
+</a>
                     </Link>
 
                     <a
