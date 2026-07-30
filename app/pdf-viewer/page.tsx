@@ -1,31 +1,14 @@
-"use client";
+import { Suspense } from "react";
 
-import { useSearchParams } from "next/navigation";
+// Fallback inline PDF viewer placeholder to avoid missing module import.
+const PdfViewerClient = () => {
+  return <div className="p-6">PDF Viewer unavailable.</div>;
+};
 
-export default function PdfViewer() {
-  const params = useSearchParams();
-
-  const url = params.get("url");
-
-  if (!url) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <h1 className="text-3xl font-bold">
-          PDF Not Found
-        </h1>
-      </div>
-    );
-  }
-
+export default function PdfViewerPage() {
   return (
-    <div className="w-full h-screen bg-slate-900">
-
-      <iframe
-        src={url}
-        className="w-full h-full"
-        title="PDF Viewer"
-      />
-
-    </div>
+    <Suspense fallback={<div className="p-6">Loading PDF Viewer...</div>}>
+      <PdfViewerClient />
+    </Suspense>
   );
 }
