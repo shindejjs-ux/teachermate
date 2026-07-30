@@ -17,8 +17,8 @@ import {
   Users,
   UserCog,
   Settings,
+  LogOut,
 } from "lucide-react";
-
 const menu = [
   {
     title: "Dashboard",
@@ -26,7 +26,7 @@ const menu = [
     icon: LayoutDashboard,
   },
   {
-    title: "Digital Library",
+    title: "digital library",
     href: "/digital-library",
     icon: Library,
   },
@@ -92,21 +92,30 @@ const menu = [
   },
 
   {
-    heading: "System",
-  },
+  heading: "System",
+},
 
-  {
-    title: "Settings",
-    href: "/admin/settings",
-    icon: Settings,
-  },
+{
+  title: "Settings",
+  href: "/admin/settings",
+  icon: Settings,
+},
+
+{
+  heading: "Account",
+},
+
+{
+  title: "Logout",
+  href: "/auth/logout",
+  icon: LogOut,
+},
 ];
-
 export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-72 bg-slate-900 text-white min-h-screen shadow-xl">
+    <aside className="fixed left-0 top-0 h-screen w-72 bg-slate-900 text-white shadow-xl flex flex-col">
 
       {/* Logo */}
 
@@ -124,7 +133,7 @@ export default function Sidebar() {
 
       {/* Menu */}
 
-      <nav className="p-4 space-y-2">
+      <nav className="flex-1 overflow-y-auto p-4 space-y-2">
 
         {menu.map((item, index) => {
           if ("heading" in item) {
@@ -166,7 +175,7 @@ export default function Sidebar() {
 
       {/* Footer */}
 
-      <div className="absolute bottom-0 w-72 border-t border-slate-700 p-4">
+      <div className="border-t border-slate-700 p-4">
 
         <div className="rounded-xl bg-slate-800 p-4">
 

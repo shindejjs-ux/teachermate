@@ -1,5 +1,5 @@
 {
-  "$schema": "https://ui.shadcn.com/schema.json",
+  "": "",
   "style": "radix-nova",
   "rsc": true,
   "tsx": true,
@@ -10,7 +10,7 @@
     "cssVariables": true,
     "prefix": ""
   },
-  "iconLibrary": "lucide",
+  "icon": "lucide",
   "rtl": false,
   "aliases": {
     "components": "@/components",

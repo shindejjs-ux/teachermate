@@ -1,179 +1,252 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 
-export default function BooksPage() {
-  const [search, setSearch] = useState("");
-  const [books, setBooks] = useState<any[]>([]);
+export default async function BooksPage() {
+  const supabase = await createClient();
 
-  useEffect(() => {
-    loadBooks();
-  }, []);
-
-  async function loadBooks() {
-    const { data, error } = await supabase
-      .from("books")
-      .select(`
-        id,
-        title,
-        subjects (
-          name
-        )
-      `)
-      .order("id");
-
-    if (error) {
-      console.error(error);
-      return;
-    }
-
-    setBooks(data || []);
-  }
-
-  const filteredBooks = books.filter((book) =>
-    book.title.toLowerCase().includes(search.toLowerCase())
-  );
-async function addBook() {
-
-  const input = document.getElementById("newBook") as HTMLInputElement;
-
-  if (!input?.value.trim()) return;
-
-  const { error } = await supabase
+  const { data: books } = await supabase
     .from("books")
-    .insert({
-      title: input.value,
-      subject_id: 1,
-      board_id: 1,
-      class_id: 9,
-    });
+    .select(`
+      *,
+      classes(class_name),
+      subjects(subject_name)
+    `)
+    .order("class_id")
+    .order("subject_id")
+    .order("title");
 
-  if (error) {
-    console.error(error);
-    return;
-  }
-
-  input.value = "";
-
-  loadBooks();
-
-}
-
-async function deleteBook(id: number) {
-  const ok = confirm("Delete this book?");
-
-  if (!ok) return;
-
-  await supabase
-    .from("books")
-    .delete()
-    .eq("id", id);
-
-  loadBooks();
-}
+  const totalBooks = books?.length || 0;
+  const textbooks =
+    books?.filter((b) => b.book_type === "Textbook").length || 0;
+  const references =
+    books?.filter((b) => b.book_type === "Reference").length || 0;
+  const questionBanks =
+    books?.filter((b) => b.book_type === "Question Bank").length || 0;
 
   return (
-    <div className="p-8">
+    <div className="min-h-screen bg-slate-100 p-8">
 
       {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">
-          📚 Books Management
-        </h1>
 
-        <div className="flex gap-2">
+      <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-6 mb-8">
 
-  <input
-    id="newBook"
-    placeholder="New Book"
-    className="border rounded-lg px-3 py-2"
-  />
+        <div>
 
-  <button
-    onClick={addBook}
-    className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg"
-  >
-    Add Book
-  </button>
+          <h1 className="text-4xl font-bold">
+            📚 Books Management
+          </h1>
 
-</div>
-      </div>
+          <p className="text-slate-500 mt-2">
+            Manage all NCERT and Reference Books
+          </p>
 
-      {/* Search */}
-      <div className="flex justify-between items-center mb-6">
+        </div>
 
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search books..."
-          className="border rounded-lg p-3 w-80"
-        />
+        <div className="flex gap-3">
 
-        <div className="font-bold text-lg">
-          Total Books : {books.length}
+          <Link
+            href="/admin/books/import"
+            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-semibold"
+          >
+            📥 Import Books
+          </Link>
+
+          <Link
+            href="/admin/books/new"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-semibold"
+          >
+            ➕ Add Book
+          </Link>
+
         </div>
 
       </div>
 
+      {/* Stats */}
+
+      <div className="grid md:grid-cols-4 gap-6 mb-8">
+
+        <div className="bg-white rounded-2xl shadow p-6 text-center">
+          <div className="text-5xl">📚</div>
+          <h2 className="text-3xl font-bold mt-3">
+            {totalBooks}
+          </h2>
+          <p className="text-slate-500">
+            Total Books
+          </p>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow p-6 text-center">
+          <div className="text-5xl">📘</div>
+          <h2 className="text-3xl font-bold mt-3">
+            {textbooks}
+          </h2>
+          <p className="text-slate-500">
+            Textbooks
+          </p>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow p-6 text-center">
+          <div className="text-5xl">📖</div>
+          <h2 className="text-3xl font-bold mt-3">
+            {references}
+          </h2>
+          <p className="text-slate-500">
+            Reference Books
+          </p>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow p-6 text-center">
+          <div className="text-5xl">❓</div>
+          <h2 className="text-3xl font-bold mt-3">
+            {questionBanks}
+          </h2>
+          <p className="text-slate-500">
+            Question Banks
+          </p>
+        </div>
+
+      </div>
+
+      {/* Search */}
+
+      <div className="bg-white rounded-2xl shadow p-5 mb-6">
+
+        <input
+          type="text"
+          placeholder="🔍 Search books... (Search functionality will be added next)"
+          className="w-full border rounded-xl p-4"
+          disabled
+        />
+
+      </div>
+
       {/* Table */}
-      <table className="w-full border border-gray-300">
 
-        <thead className="bg-gray-100">
+      <div className="bg-white rounded-2xl shadow overflow-hidden">
 
-          <tr>
-            <th className="border p-3">ID</th>
-            <th className="border p-3">Book</th>
-            <th className="border p-3">Subject</th>
-            <th className="border p-3">Action</th>
-          </tr>
+        <div className="px-6 py-5 border-b bg-slate-50">
 
-        </thead>
+          <h2 className="text-2xl font-bold">
+            Book List
+          </h2>
 
-        <tbody>
+        </div>
 
-          {filteredBooks.map((book) => (
+        {books && books.length > 0 ? (
 
-            <tr key={book.id}>
+          <div className="overflow-x-auto">
 
-              <td className="border p-3">{book.id}</td>
+            <table className="w-full">
 
-              <td className="border p-3">{book.title}</td>
+              <thead className="bg-slate-100">
 
-              <td className="border p-3">
-                {book.subjects?.[0]?.name || "-"}
-              </td>
+                <tr>
 
-              <td className="border p-3">
+                  <th className="text-left p-4">Class</th>
 
-                <div className="flex gap-4">
+                  <th className="text-left p-4">Subject</th>
 
-  <Link
-    href={`/admin/chapters?book=${book.id}`}
-    className="text-blue-600"
-  >
-    Chapters
-  </Link>
+                  <th className="text-left p-4">Book</th>
 
-  <button
-    onClick={() => deleteBook(book.id)}
-    className="text-red-600"
-  >
-    Delete
-  </button>
+                  <th className="text-left p-4">Publisher</th>
 
-</div>
+                  <th className="text-left p-4">Type</th>
 
-              </td>
+                  <th className="text-left p-4">Language</th>
 
-            </tr>
+                  <th className="text-center p-4">Actions</th>
 
-          ))}
+                </tr>
 
-        </tbody>
+              </thead>
 
-      </table>
+              <tbody>
+
+                {books.map((book) => (
+
+                  <tr
+                    key={book.id}
+                    className="border-t hover:bg-slate-50 transition"
+                  >
+
+                    <td className="p-4">
+                      {book.classes?.class_name}
+                    </td>
+
+                    <td className="p-4">
+                      {book.subjects?.subject_name}
+                    </td>
+
+                    <td className="p-4 font-semibold">
+                      {book.title}
+                    </td>
+
+                    <td className="p-4">
+                      {book.publisher}
+                    </td>
+
+                    <td className="p-4">
+
+                      <span className="bg-indigo-100 text-indigo-700 rounded-full px-3 py-1 text-sm">
+
+                        {book.book_type}
+
+                      </span>
+
+                    </td>
+
+                    <td className="p-4">
+                      {book.language}
+                    </td>
+
+                    <td className="p-4">
+
+                      <div className="flex justify-center gap-2">
+
+                        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                          ✏ Edit
+                        </button>
+
+                        <button className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg">
+                          🗑 Delete
+                        </button>
+
+                      </div>
+
+                    </td>
+
+                  </tr>
+
+                ))}
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        ) : (
+
+          <div className="text-center py-20">
+
+            <div className="text-7xl mb-6">
+              📚
+            </div>
+
+            <h2 className="text-3xl font-bold">
+              No Books Available
+            </h2>
+
+            <p className="text-slate-500 mt-4">
+              Click "Add Book" or "Import Books" to start building your digital library.
+            </p>
+
+          </div>
+
+        )}
+
+      </div>
 
     </div>
   );

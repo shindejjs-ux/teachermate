@@ -1,184 +1,120 @@
 "use client";
-
+import Link from "next/link";
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase-browser";
 
 type Teacher = {
-  id: number;
-  name: string;
+  id: string;
+  employee_code: string;
+  teacher_name: string;
   email: string;
   mobile: string;
-  subject: string;
   designation: string;
+  department: string;
+  status: string;
 };
 
 export default function TeachersPage() {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
-
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [mobile, setMobile] = useState("");
-  const [subject, setSubject] = useState("");
-  const [designation, setDesignation] = useState("");
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     loadTeachers();
   }, []);
 
   async function loadTeachers() {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("teachers")
       .select("*")
-      .order("id");
+      .order("teacher_name");
 
-    setTeachers(data || []);
-  }
-
-  async function saveTeacher() {
-    if (!name || !email) {
-      alert("Please fill required fields.");
-      return;
+    if (!error) {
+      setTeachers(data || []);
     }
-
-    const { error } = await supabase
-      .from("teachers")
-      .insert({
-        name,
-        email,
-        mobile,
-        subject,
-        designation,
-      });
-
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    setName("");
-    setEmail("");
-    setMobile("");
-    setSubject("");
-    setDesignation("");
-
-    loadTeachers();
   }
 
-  async function deleteTeacher(id: number) {
-    await supabase
-      .from("teachers")
-      .delete()
-      .eq("id", id);
-
-    loadTeachers();
-  }
+  const filtered = teachers.filter((t) =>
+    (t.teacher_name || "")
+      .toLowerCase()
+      .includes(search.toLowerCase())
+  );
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="space-y-6">
 
-      <div className="bg-green-700 text-white p-8">
+      <div className="flex justify-between items-center">
         <h1 className="text-4xl font-bold">
-          👨‍🏫 Teacher Management
+          Teachers
         </h1>
+
+        <Link
+  href="/admin/teachers/new"
+  className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-xl font-semibold"
+>
+  + Add Teacher
+</Link>
       </div>
 
-      <div className="max-w-7xl mx-auto p-8">
+      <input
+        placeholder="Search teacher..."
+        value={search}
+        onChange={(e)=>setSearch(e.target.value)}
+        className="border rounded-xl p-3 w-full"
+      />
 
-        <div className="bg-white rounded-xl shadow p-6 mb-8">
+      <div className="bg-white rounded-xl shadow overflow-hidden">
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <table className="w-full">
 
-            <input
-              placeholder="Teacher Name"
-              value={name}
-              onChange={(e)=>setName(e.target.value)}
-              className="border rounded-lg p-3"
-            />
+          <thead className="bg-slate-100">
 
-            <input
-              placeholder="Email"
-              value={email}
-              onChange={(e)=>setEmail(e.target.value)}
-              className="border rounded-lg p-3"
-            />
+            <tr>
 
-            <input
-              placeholder="Mobile"
-              value={mobile}
-              onChange={(e)=>setMobile(e.target.value)}
-              className="border rounded-lg p-3"
-            />
+              <th className="p-4 text-left">Code</th>
+              <th className="p-4 text-left">Name</th>
+              <th className="p-4 text-left">Email</th>
+              <th className="p-4 text-left">Mobile</th>
+              <th className="p-4 text-left">Designation</th>
+              <th className="p-4 text-left">Status</th>
 
-            <input
-              placeholder="Subject"
-              value={subject}
-              onChange={(e)=>setSubject(e.target.value)}
-              className="border rounded-lg p-3"
-            />
+            </tr>
 
-            <input
-              placeholder="Designation"
-              value={designation}
-              onChange={(e)=>setDesignation(e.target.value)}
-              className="border rounded-lg p-3"
-            />
+          </thead>
 
-          </div>
+          <tbody>
 
-          <button
-            onClick={saveTeacher}
-            className="mt-6 bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl font-bold"
-          >
-            Save Teacher
-          </button>
+            {filtered.map((teacher)=>(
 
-        </div>
+              <tr
+                key={teacher.id}
+                className="border-t hover:bg-slate-50"
+              >
 
-        <div className="bg-white rounded-xl shadow overflow-auto">
+                <td className="p-4">{teacher.employee_code}</td>
 
-          <table className="w-full">
+                <td className="p-4 font-semibold">
+                  {teacher.teacher_name}
+                </td>
 
-            <thead className="bg-green-600 text-white">
+                <td className="p-4">{teacher.email}</td>
 
-              <tr>
-                <th className="p-4">Name</th>
-                <th>Email</th>
-                <th>Mobile</th>
-                <th>Subject</th>
-                <th>Designation</th>
-                <th>Action</th>
+                <td className="p-4">{teacher.mobile}</td>
+
+                <td className="p-4">{teacher.designation}</td>
+
+                <td className="p-4">
+                  <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full">
+                    {teacher.status || "Active"}
+                  </span>
+                </td>
+
               </tr>
 
-            </thead>
+            ))}
 
-            <tbody>
+          </tbody>
 
-              {teachers.map((teacher)=>(
-                <tr key={teacher.id} className="border-b">
-
-                  <td className="p-4">{teacher.name}</td>
-                  <td>{teacher.email}</td>
-                  <td>{teacher.mobile}</td>
-                  <td>{teacher.subject}</td>
-                  <td>{teacher.designation}</td>
-
-                  <td>
-                    <button
-                      onClick={()=>deleteTeacher(teacher.id)}
-                      className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
-                    >
-                      Delete
-                    </button>
-                  </td>
-
-                </tr>
-              ))}
-
-            </tbody>
-
-          </table>
-
-        </div>
+        </table>
 
       </div>
 

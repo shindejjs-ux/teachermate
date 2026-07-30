@@ -1,42 +1,31 @@
 "use client";
 
-import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
-function PDFViewerContent() {
-  const searchParams = useSearchParams();
+export default function PdfViewer() {
+  const params = useSearchParams();
 
-  const url = searchParams.get("url");
+  const url = params.get("url");
 
-  return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <h1 className="text-2xl font-bold mb-4">
-        PDF Viewer
-      </h1>
-
-      {url ? (
-        <iframe
-          src={url}
-          className="w-full h-[85vh] rounded-lg border"
-          title="PDF Viewer"
-        />
-      ) : (
-        <p className="text-red-600">
-          PDF file not found
-        </p>
-      )}
-    </div>
-  );
-}
-
-export default function PDFViewerPage() {
-  return (
-    <Suspense fallback={
-      <div className="p-8">
-        Loading PDF Viewer...
+  if (!url) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <h1 className="text-3xl font-bold">
+          PDF Not Found
+        </h1>
       </div>
-    }>
-      <PDFViewerContent />
-    </Suspense>
+    );
+  }
+
+  return (
+    <div className="w-full h-screen bg-slate-900">
+
+      <iframe
+        src={url}
+        className="w-full h-full"
+        title="PDF Viewer"
+      />
+
+    </div>
   );
 }

@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase-browser";
 
 type Resource = {
   id: number;
@@ -12,313 +12,212 @@ type Resource = {
   file_url: string | null;
 };
 
-function getResourceUI(type: string) {
-  switch (type.toLowerCase()) {
-    case "pdf":
-    case "textbook":
-      return {
-        icon: "📘",
-        color: "bg-blue-100 text-blue-700",
-      };
-
-    case "worksheet":
-      return {
-        icon: "📝",
-        color: "bg-green-100 text-green-700",
-      };
-
-    case "lesson_plan":
-      return {
-        icon: "📋",
-        color: "bg-purple-100 text-purple-700",
-      };
-
-    case "notes":
-      return {
-        icon: "📒",
-        color: "bg-yellow-100 text-yellow-700",
-      };
-
-    case "video":
-      return {
-        icon: "🎥",
-        color: "bg-red-100 text-red-700",
-      };
-
-    case "ppt":
-      return {
-        icon: "📊",
-        color: "bg-orange-100 text-orange-700",
-      };
-
-    default:
-      return {
-        icon: "📄",
-        color: "bg-gray-100 text-gray-700",
-      };
-  }
-}
-function getFileUrl(resource: Resource, chapterId: number) {
-  if (resource.file_url && resource.file_url.trim() !== "") {
-    return resource.file_url;
-  }
-
-  // Fallback to local PDF
-  return `/pdfs/class9/mathematics/ch${chapterId}.pdf`;
-}
 export default function ChapterPage() {
   const params = useParams();
-  const router = useRouter();
 
+  const classId = Number(params.class);
+  const bookId = Number(params.book);
   const chapterId = Number(params.chapter);
+  const folder = params.book;
 
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
-
+const [book, setBook] = useState<any>(null);
   useEffect(() => {
-    if (chapterId) {
-      loadResources();
-    }
-  }, [chapterId]);
+    loadResources();
+  }, []);
 
   async function loadResources() {
-    try {
-      setLoading(true);
-      setErrorMessage("");
+    const { data: bookData } = await supabase
+  .from("books")
+  .select("storage_folder")
+  .eq("id", bookId)
+  .single();
 
-      const { data, error } = await supabase
-        .from("resources")
-        .select("id,title,resource_type,file_url")
-        .eq("chapter_id", chapterId)
-        .order("id");
-
-      if (error) throw error;
-
-      setResources(data || []);
-    } catch (error) {
-      console.error(error);
-      setErrorMessage("Unable to load resources. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+setBook(bookData);
   }
 
+function pdfUrl() {
+  if (!book?.storage_folder) return "";
+
+  const { data } = supabase.storage
+    .from("library")
+    .getPublicUrl(
+      `class${classId}/${book.storage_folder}/ch${chapterId}.pdf`
+    );
+
+  return data.publicUrl;
+}
+  
+
+  const cards = [
+  {
+    title: "Textbook PDF",
+    icon: "📘",
+    color: "bg-blue-600",
+    href: `/pdf-viewer?url=${encodeURIComponent(pdfUrl())}`,
+  },
+  {
+    title: "Download PDF",
+    icon: "⬇",
+    color: "bg-green-600",
+    href: pdfUrl(),
+  },
+  {
+    title: "Worksheet",
+    icon: "📝",
+    color: "bg-orange-600",
+    href: "#",
+  },
+  {
+    title: "Notes",
+    icon: "📒",
+    color: "bg-yellow-600",
+    href: "#",
+  },
+  {
+    title: "PPT",
+    icon: "📊",
+    color: "bg-purple-600",
+    href: "#",
+  },
+  {
+    title: "Video",
+    icon: "🎥",
+    color: "bg-red-600",
+    href: "#",
+  },
+  {
+    title: "Question Bank",
+    icon: "❓",
+    color: "bg-pink-600",
+    href: "#",
+  },
+  {
+    title: "Sample Paper",
+    icon: "📄",
+    color: "bg-indigo-600",
+    href: "#",
+  },
+];
+
   return (
-  <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-slate-100">
 
-    {/* Header */}
-    <div className="bg-gradient-to-r from-indigo-700 to-blue-700 text-white p-8 shadow-lg">
+      <div className="bg-gradient-to-r from-indigo-700 to-blue-700 text-white py-12">
 
-      <button
-        onClick={() => router.back()}
-        className="bg-white text-indigo-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100"
-      >
-        ← Back
-      </button>
+        <div className="max-w-7xl mx-auto px-8">
 
-      <div className="mt-6">
+          <h1 className="text-5xl font-bold">
+            Chapter {chapterId}
+          </h1>
 
-        <h1 className="text-4xl font-bold">
-          📚 Chapter Resources
-        </h1>
+          <p className="text-xl mt-3">
+            Digital Learning Hub
+          </p>
 
-        <p className="text-indigo-100 mt-2">
-          Read PDFs, Notes, Worksheets and Videos
-        </p>
+        </div>
+
+      </div>
+
+      <div className="max-w-7xl mx-auto p-8">
+
+        {loading ? (
+          <div className="text-center text-xl">
+            Loading...
+          </div>
+        ) : (
+          <>
+            <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-6">
+
+              {cards.map((card) => (
+
+                <Link
+                  key={card.title}
+                  href={card.href}
+                  target={card.title === "Download PDF" ? "_blank" : "_self"}
+                >
+
+                  <div
+                    className={`${card.color} text-white rounded-2xl p-8 hover:scale-105 transition shadow-lg`}
+                  >
+
+                    <div className="text-6xl">
+                      {card.icon}
+                    </div>
+
+                    <h2 className="mt-5 text-2xl font-bold">
+                      {card.title}
+                    </h2>
+
+                  </div>
+
+                </Link>
+
+              ))}
+
+            </div>
+
+            <div className="mt-12 bg-white rounded-2xl shadow p-8">
+
+              <h2 className="text-3xl font-bold mb-6">
+                Chapter Resources
+              </h2>
+
+              {resources.length === 0 ? (
+                <p>No resources uploaded.</p>
+              ) : (
+                <div className="space-y-4">
+
+                  {resources.map((resource) => (
+
+                    <div
+                      key={resource.id}
+                      className="border rounded-xl p-5 flex justify-between items-center"
+                    >
+
+                      <div>
+
+                        <h3 className="font-bold text-lg">
+                          {resource.title}
+                        </h3>
+
+                        <p className="text-slate-500">
+                          {resource.resource_type}
+                        </p>
+
+                      </div>
+
+                      <Link
+                        href={
+                          resource.file_url
+  ? `/pdf-viewer?url=${encodeURIComponent(
+      supabase.storage
+        .from("library")
+        .getPublicUrl(resource.file_url)
+        .data.publicUrl
+    )}`
+  : `/pdf-viewer?url=${encodeURIComponent(pdfUrl())}`
+                        }
+                        className="bg-indigo-600 text-white px-5 py-3 rounded-lg"
+                      >
+                        Open
+                      </Link>
+
+                    </div>
+
+                  ))}
+
+                </div>
+              )}
+
+            </div>
+
+          </>
+        )}
 
       </div>
 
     </div>
-
-    <div className="p-8">
-
-      {/* Statistics */}
-
-      {!loading && !errorMessage && (
-
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-
-          <div className="bg-white rounded-xl shadow p-6 text-center">
-
-            <div className="text-5xl">📚</div>
-
-            <h2 className="text-3xl font-bold mt-3">
-              {resources.length}
-            </h2>
-
-            <p className="text-gray-500">
-              Total Resources
-            </p>
-
-          </div>
-
-          <div className="bg-white rounded-xl shadow p-6 text-center">
-
-            <div className="text-5xl">📘</div>
-
-            <h2 className="text-3xl font-bold mt-3">
-              PDF
-            </h2>
-
-            <p className="text-gray-500">
-              Main Book
-            </p>
-
-          </div>
-
-          <div className="bg-white rounded-xl shadow p-6 text-center">
-
-            <div className="text-5xl">🎯</div>
-
-            <h2 className="text-3xl font-bold mt-3">
-              Ready
-            </h2>
-
-            <p className="text-gray-500">
-              Learning Status
-            </p>
-
-          </div>
-
-        </div>
-
-      )}
-
-      {loading && (
-
-        <div className="bg-white rounded-xl shadow p-10 text-center">
-
-          <p className="text-lg font-semibold text-indigo-700">
-            Loading Resources...
-          </p>
-
-        </div>
-
-      )}
-
-      {!loading && errorMessage && (
-
-        <div className="bg-red-100 border border-red-300 rounded-xl p-6">
-
-          <p className="text-red-700">
-            {errorMessage}
-          </p>
-
-          <button
-            onClick={loadResources}
-            className="mt-4 bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg"
-          >
-            Retry
-          </button>
-
-        </div>
-
-      )}
-
-      {!loading && !errorMessage && resources.length === 0 && (
-
-        <div className="bg-white rounded-xl shadow p-10 text-center">
-
-          <h2 className="text-2xl font-bold">
-            No Resources Available
-          </h2>
-
-          <p className="text-gray-500 mt-2">
-            Resources will be uploaded soon.
-          </p>
-
-        </div>
-
-      )}
-
-      {!loading && !errorMessage && resources.length > 0 && (
-
-        <div className="grid gap-6">
-
-          {resources.map((resource) => {
-
-            const ui = getResourceUI(resource.resource_type);
-
-            return (
-
-              <div
-                key={resource.id}
-                className="bg-white rounded-2xl border shadow-md hover:shadow-xl transition-all duration-300 p-6"
-              >
-
-                <div className="flex flex-col lg:flex-row justify-between items-center gap-6">
-
-                  <div className="flex items-center gap-5">
-
-                    <div className="text-6xl">
-
-                      {ui.icon}
-
-                    </div>
-
-                    <div>
-
-                      <h2 className="text-2xl font-bold text-gray-800">
-
-                        {resource.title}
-
-                      </h2>
-
-                      <span
-                        className={`inline-block mt-3 px-4 py-1 rounded-full text-sm font-semibold ${ui.color}`}
-                      >
-
-                        {resource.resource_type}
-
-                      </span>
-
-                    </div>
-
-                  </div>
-
-                  <div className="flex gap-3">
-
-                    <Link
-  href={`/pdf-viewer?url=${encodeURIComponent(
-    getFileUrl(resource, chapterId)
-  )}`}
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-semibold"
-                    >
-                      <a
-  href={getFileUrl(resource, chapterId)}
-  target="_blank"
-  rel="noopener noreferrer"
-  className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-semibold"
->
-  📖 Read
-</a>
-                    </Link>
-
-                    <a
-                      href={getFileUrl(resource, chapterId)}
-                      download
-                      className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold"
-                    >
-                      ⬇ Download
-                    </a>
-
-                  </div>
-
-                </div>
-
-              </div>
-
-            );
-
-          })}
-
-        </div>
-
-      )}
-
-    </div>
-
-  </div>
-);
+  );
 }

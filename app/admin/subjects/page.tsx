@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase-browser";
 
 type ClassItem = {
   id: number;
@@ -12,10 +12,10 @@ type Subject = {
   id: number;
   name: string;
   class_id: number;
-  // Supabase returns related rows as an array even for single relation
   classes: {
+    id: number;
     name: string;
-  }[] | null;
+  }[];
 };
 export default function SubjectsPage() {
   const [classes, setClasses] = useState<ClassItem[]>([]);
@@ -43,11 +43,14 @@ export default function SubjectsPage() {
     const { data, error } = await supabase
       .from("subjects")
       .select(`
-        id,
-        name,
-        class_id,
-        classes(name)
-      `)
+  id,
+  name,
+  class_id,
+  classes!inner(
+    id,
+    name
+  )
+`)
       .order("id");
 
     if (!error && data) {
@@ -158,7 +161,9 @@ export default function SubjectsPage() {
               <tr key={item.id} className="border-t">
 
                 <td className="p-4">{item.id}</td>
-                <td className="p-4">{item.classes?.[0]?.name ?? "-"}</td>
+                <td className="p-4">
+                  {item.classes?.[0]?.name ?? "-"}
+                </td>
                 <td className="p-4">{item.name}</td>
 
                 <td className="p-4 text-center">

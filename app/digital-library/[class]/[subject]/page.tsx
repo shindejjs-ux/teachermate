@@ -1,165 +1,144 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 
-type Book = {
-  id: number;
-  title: string;
-};
-
-export default function SubjectPage() {
-  const params = useParams();
-  const router = useRouter();
+export default async function SubjectPage({
+  params,
+}: {
+  params: {
+    class: string;
+    subject: string;
+  };
+}) {
+  const supabase = await createClient();
 
   const classId = Number(params.class);
   const subjectId = Number(params.subject);
 
-  const [books, setBooks] = useState<Book[]>([]);
-  const [filteredBooks, setFilteredBooks] = useState<Book[]>([]);
-  const [search, setSearch] = useState("");
+  const { data: subject } = await supabase
+    .from("subjects")
+    .select("*")
+    .eq("id", subjectId)
+    .single();
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-  if (classId && subjectId) {
-    loadBooks();
-  }
-}, [classId, subjectId]);
-
-  useEffect(() => {
-    if (!search.trim()) {
-      setFilteredBooks(books);
-      return;
-    }
-
-    setFilteredBooks(
-      books.filter((book) =>
-        book.title.toLowerCase().includes(search.toLowerCase())
-      )
-    );
-  }, [search, books]);
-
-  async function loadBooks() {
-    setLoading(true);
-    setError("");
-
-    const { data, error } = await supabase
-      .from("books")
-      .select("id,title")
-      .eq("subject_id", subjectId)
-      .order("id");
-
-    if (error) {
-      console.error(error);
-      setError("Unable to load books.");
-      setLoading(false);
-      return;
-    }
-
-    setBooks(data || []);
-    setFilteredBooks(data || []);
-    setLoading(false);
-  }
+  const { data: books } = await supabase
+    .from("books")
+    .select("*")
+    .eq("class_id", classId)
+    .eq("subject_id", subjectId)
+    .order("title");
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-slate-100">
+      {/* Header */}
 
-      <div className="bg-indigo-700 text-white p-8 shadow">
+      <div className="bg-gradient-to-r from-indigo-700 to-blue-700 text-white">
 
-        <button
-          onClick={() => router.back()}
-          className="mb-4 bg-white text-indigo-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100"
-        >
-          ← Back
-        </button>
+        <div className="max-w-7xl mx-auto px-8 py-10">
 
-        <h1 className="text-4xl font-bold">
-          📘 Books
-        </h1>
+          <Link
+            href={`/digital-library/${classId}`}
+            className="inline-block bg-white/20 hover:bg-white/30 px-5 py-2 rounded-lg mb-6"
+          >
+            ← Back
+          </Link>
 
-        <p className="text-indigo-100 mt-2">
-          Select a book to view its chapters.
-        </p>
+          <h1 className="text-5xl font-bold">
+            {subject?.subject_name}
+          </h1>
+
+          <p className="text-xl mt-3 text-indigo-100">
+            Digital Library
+          </p>
+
+          <div className="mt-6 inline-flex items-center gap-2 bg-white/20 px-5 py-2 rounded-full">
+            📚
+            <span>{books?.length || 0} Books Available</span>
+          </div>
+
+        </div>
 
       </div>
 
-      <div className="p-8">
+      {/* Books */}
 
-        <input
-          type="text"
-          placeholder="Search Book..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full md:w-96 mb-8 rounded-lg border p-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
+      <div className="max-w-7xl mx-auto px-8 py-12">
 
-        {loading && (
-          <div className="text-center text-lg font-semibold text-indigo-700">
-            Loading Books...
-          </div>
-        )}
+        {books && books.length > 0 ? (
 
-        {!loading && error && (
-          <div className="bg-red-100 border border-red-300 rounded-xl p-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
 
-            <p className="text-red-700">{error}</p>
-
-            <button
-              onClick={loadBooks}
-              className="mt-4 bg-red-600 text-white px-5 py-2 rounded-lg"
-            >
-              Retry
-            </button>
-
-          </div>
-        )}
-
-        {!loading && !error && filteredBooks.length === 0 && (
-          <div className="bg-white rounded-xl shadow p-10 text-center">
-
-            <h2 className="text-2xl font-bold">
-              No Books Available
-            </h2>
-
-            <p className="text-gray-500 mt-2">
-              Books will be added soon.
-            </p>
-
-          </div>
-        )}
-
-        {!loading && !error && filteredBooks.length > 0 && (
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-            {filteredBooks.map((book) => (
+            {books.map((book) => (
 
               <Link
                 key={book.id}
                 href={`/digital-library/${classId}/${subjectId}/${book.id}`}
               >
-                <div className="bg-white rounded-2xl shadow-lg p-8 hover:-translate-y-2 hover:shadow-2xl transition-all duration-300 cursor-pointer">
+                <div className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
 
-                  <div className="text-6xl text-center mb-5">
-                    📘
+                  <div className="h-80 bg-slate-100 flex items-center justify-center">
+
+                    <Image
+                      src={`/covers/class${classId}/${book.cover_image || "default.jpg"}`}
+                      alt={book.title}
+                      width={190}
+                      height={260}
+                      className="object-contain"
+                    />
+
                   </div>
 
-                  <h2 className="text-xl font-bold text-center text-gray-800">
-                    {book.title}
-                  </h2>
+                  <div className="p-6">
 
-                  <p className="text-center text-gray-500 mt-3">
-                    View Chapters →
-                  </p>
+                    <h2 className="text-xl font-bold line-clamp-2">
+                      {book.title}
+                    </h2>
+
+                    <p className="text-slate-500 mt-2">
+                      {book.publisher || "Publisher"}
+                    </p>
+
+                    <div className="flex justify-between items-center mt-5">
+
+                      <span className="bg-indigo-100 text-indigo-700 rounded-full px-3 py-1 text-sm">
+                        {book.book_type || "Textbook"}
+                      </span>
+
+                      <span className="text-sm text-slate-500">
+                        {book.language || "English"}
+                      </span>
+
+                    </div>
+
+                    <button className="w-full mt-6 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl py-3 font-semibold transition">
+                      📖 Open Book
+                    </button>
+
+                  </div>
 
                 </div>
+
               </Link>
 
             ))}
+
+          </div>
+
+        ) : (
+
+          <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
+
+            <div className="text-7xl mb-6">
+              📚
+            </div>
+
+            <h2 className="text-3xl font-bold">
+              No Books Found
+            </h2>
+
+            <p className="text-slate-500 mt-4">
+              Please add books from the Admin Panel.
+            </p>
 
           </div>
 

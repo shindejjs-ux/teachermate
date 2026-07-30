@@ -1,287 +1,158 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { supabase } from "@/lib/supabase";
-import { Pencil, Trash2, Plus, Search } from "lucide-react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { supabase } from "@/lib/supabase-browser";
 
-type ClassItem = {
+type Class = {
   id: number;
   board_id: number;
   name: string;
+  boards?: {
+    name: string;
+  }[];
 };
 
 export default function ClassesPage() {
-  const [classes, setClasses] = useState<ClassItem[]>([]);
+  const [classes, setClasses] = useState<Class[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [search, setSearch] = useState("");
+  useEffect(() => {
+    loadClasses();
+    async function deleteClass(id: number) {
+  const ok = confirm(
+    "Are you sure you want to delete this class?"
+  );
 
-  const [showModal, setShowModal] = useState(false);
-  const [editing, setEditing] = useState<ClassItem | null>(null);
+  if (!ok) return;
 
-  const [name, setName] = useState("");
-  const [boardId, setBoardId] = useState(1);
+  const { error } = await supabase
+    .from("classes")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  loadClasses();
+}
+  }, []);
 
   async function loadClasses() {
     setLoading(true);
 
     const { data, error } = await supabase
       .from("classes")
-      .select("*")
+      .select(`
+        id,
+        board_id,
+        name,
+        boards(name)
+      `)
       .order("id");
 
-    if (!error) {
-      setClasses(data || []);
+    if (error) {
+      console.error(error);
+    } else {
+      setClasses((data ?? []) as Class[]);
     }
 
     setLoading(false);
   }
 
-  useEffect(() => {
-    loadClasses();
-  }, []);
-
-  const filtered = useMemo(() => {
-    return classes.filter((c) =>
-      c.name.toLowerCase().includes(search.toLowerCase())
-    );
-  }, [classes, search]);
-
-  function openAdd() {
-    setEditing(null);
-    setName("");
-    setBoardId(1);
-    setShowModal(true);
-  }
-
-  function openEdit(item: ClassItem) {
-    setEditing(item);
-    setName(item.name);
-    setBoardId(item.board_id);
-    setShowModal(true);
-  }
-
-  async function saveClass() {
-    if (!name.trim()) {
-      alert("Enter class name");
-      return;
-    }
-
-    if (editing) {
-      await supabase
-        .from("classes")
-        .update({
-          name,
-          board_id: boardId,
-        })
-        .eq("id", editing.id);
-    } else {
-      await supabase.from("classes").insert({
-        name,
-        board_id: boardId,
-      });
-    }
-
-    setShowModal(false);
-    loadClasses();
-  }
-
   async function deleteClass(id: number) {
-    if (!confirm("Delete this class?")) return;
-
-    await supabase
+    const { error } = await supabase
       .from("classes")
       .delete()
       .eq("id", id);
+
+    if (error) {
+      console.error(error);
+      return;
+    }
 
     loadClasses();
   }
 
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div className="space-y-6">
 
-      <div className="bg-indigo-700 text-white p-8 shadow">
+      <div className="flex items-center justify-between">
 
-        <h1 className="text-4xl font-bold">
-          Classes
-        </h1>
+        <div>
+          <h1 className="text-4xl font-bold">
+            Classes
+          </h1>
 
-        <p className="opacity-90 mt-2">
-          Manage all CBSE Classes
-        </p>
+          <p className="text-gray-500">
+            Manage Classes
+          </p>
+        </div>
+
+        <Link
+          href="/admin/classes/new"
+          className="rounded-xl bg-indigo-600 px-6 py-3 text-white hover:bg-indigo-700"
+        >
+          + Add Class
+        </Link>
 
       </div>
 
-      <div className="p-8">
-
-        <div className="flex justify-between mb-6">
-
-          <div className="relative w-96">
-
-            <Search
-              className="absolute left-3 top-3 text-gray-500"
-              size={18}
-            />
-
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search class..."
-              className="w-full pl-10 pr-4 py-3 rounded-xl border bg-white"
-            />
-
-          </div>
-
-          <button
-            onClick={openAdd}
-            className="bg-indigo-600 text-white px-5 py-3 rounded-xl flex gap-2 items-center"
-          >
-            <Plus size={18} />
-            Add Class
-          </button>
-
+      {loading ? (
+        <div className="rounded-xl bg-white p-8 text-center shadow">
+          Loading classes...
         </div>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-4">
 
-        <div className="bg-white rounded-2xl shadow">
+          {classes.map((cls) => (
+            <div
+              key={cls.id}
+              className="rounded-xl bg-white p-6 shadow transition hover:shadow-xl"
+            >
+              <h2 className="text-2xl font-bold">
+                {cls.name}
+              </h2>
 
-          <table className="w-full">
+              <p className="mt-2 text-gray-600">
+                <strong>Board:</strong>{" "}
+               {cls.boards?.[0]?.name}
+              </p>
 
-            <thead>
+              <p className="mt-1 text-gray-500">
+                <strong>ID:</strong> {cls.id}
+              </p>
 
-              <tr className="border-b bg-slate-50">
+              <div className="mt-5 flex gap-2">
 
-                <th className="p-4 text-left">ID</th>
+                <Link
+  href={`/admin/classes/${cls.id}/edit`}
+  className="rounded bg-blue-600 px-3 py-2 text-white"
+>
+  Edit
+</Link>
 
-                <th className="p-4 text-left">
-                  Class
-                </th>
-
-                <th className="p-4 text-left">
-                  Board
-                </th>
-
-                <th className="p-4 text-right">
-                  Action
-                </th>
-
-              </tr>
-
-            </thead>
-
-            <tbody>
-
-              {loading && (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className="p-8 text-center"
-                  >
-                    Loading...
-                  </td>
-                </tr>
-              )}
-
-              {!loading &&
-                filtered.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="border-b hover:bg-slate-50"
-                  >
-                    <td className="p-4">{item.id}</td>
-
-                    <td className="p-4 font-semibold">
-                      {item.name}
-                    </td>
-
-                    <td className="p-4">
-                      {item.board_id}
-                    </td>
-
-                    <td className="p-4">
-
-                      <div className="flex justify-end gap-2">
-
-                        <button
-                          onClick={() => openEdit(item)}
-                          className="p-2 rounded bg-blue-600 text-white"
-                        >
-                          <Pencil size={16} />
-                        </button>
-
-                        <button
-                          onClick={() => deleteClass(item.id)}
-                          className="p-2 rounded bg-red-600 text-white"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-
-                      </div>
-
-                    </td>
-
-                  </tr>
-                ))}
-
-            </tbody>
-
-          </table>
-
-        </div>
-
-      </div>
-
-      {showModal && (
-
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
-
-          <div className="bg-white w-[420px] rounded-2xl p-6">
-
-            <h2 className="text-2xl font-bold mb-6">
-
-              {editing ? "Edit Class" : "Add Class"}
-
-            </h2>
-
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Class Name"
-              className="border rounded-lg w-full p-3 mb-4"
-            />
-
-            <input
-              type="number"
-              value={boardId}
-              onChange={(e) =>
-                setBoardId(Number(e.target.value))
-              }
-              className="border rounded-lg w-full p-3 mb-6"
-            />
-
-            <div className="flex justify-end gap-3">
-
-              <button
-                onClick={() => setShowModal(false)}
-                className="px-5 py-2 border rounded-lg"
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={saveClass}
-                className="bg-indigo-600 text-white px-5 py-2 rounded-lg"
-              >
-                Save
-              </button>
+                <button
+  onClick={() => deleteClass(cls.id)}
+  className="rounded-lg bg-red-600 px-3 py-2 text-white hover:bg-red-700"
+>
+  Delete
+</button>
+              </div>
 
             </div>
+          ))}
 
-          </div>
+          {classes.length === 0 && (
+            <div className="col-span-full rounded-xl bg-white p-8 text-center shadow">
+              No classes found.
+            </div>
+          )}
 
         </div>
-
       )}
-
     </div>
   );
 }

@@ -12,7 +12,7 @@ export default function QuickActions() {
 
     {
       icon: "📚",
-      title: "Digital Library",
+      title: "digital library",
       description: "Books, Notes, PPT",
     },
 

@@ -1,166 +1,86 @@
-"use client";
-
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 
-type Subject = {
-  id: number;
-  name: string;
-};
-
-export default function ClassPage() {
-  const params = useParams();
-  const router = useRouter();
+export default async function ClassPage({
+  params,
+}: {
+  params: { class: string };
+}) {
+  const supabase = await createClient();
 
   const classId = Number(params.class);
 
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [filteredSubjects, setFilteredSubjects] = useState<Subject[]>([]);
-  const [search, setSearch] = useState("");
+  const { data: classData } = await supabase
+    .from("classes")
+    .select("*")
+    .eq("id", classId)
+    .single();
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    if (classId) {
-      loadSubjects();
-    }
-  }, [classId]);
-
-  useEffect(() => {
-    if (!search.trim()) {
-      setFilteredSubjects(subjects);
-      return;
-    }
-
-    setFilteredSubjects(
-      subjects.filter((subject) =>
-        subject.name.toLowerCase().includes(search.toLowerCase())
-      )
-    );
-  }, [search, subjects]);
-
-  async function loadSubjects() {
-    setLoading(true);
-    setError("");
-
-    const { data, error } = await supabase
-      .from("subjects")
-      .select("id,name")
-      .eq("class_id", classId)
-      .order("id");
-
-    if (error) {
-      console.error(error);
-      setError("Unable to load subjects.");
-      setLoading(false);
-      return;
-    }
-
-    setSubjects(data || []);
-    setFilteredSubjects(data || []);
-    setLoading(false);
-  }
+  const { data: subjects } = await supabase
+    .from("subjects")
+    .select("*")
+    .eq("class_id", classId)
+    .order("subject_name");
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-slate-100">
 
       {/* Header */}
-      <div className="bg-indigo-700 text-white p-8 shadow">
 
-        <button
-          onClick={() => router.back()}
-          className="mb-4 bg-white text-indigo-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100"
-        >
-          ← Back
-        </button>
+      <div className="bg-gradient-to-r from-indigo-700 to-blue-700 text-white py-12">
 
-        <h1 className="text-4xl font-bold">
-          📚 Class {classId}
-        </h1>
+        <div className="max-w-7xl mx-auto px-8">
 
-        <p className="text-indigo-100 mt-2">
-          Select a subject to continue.
-        </p>
+          <h1 className="text-5xl font-bold">
+            {classData?.class_name}
+          </h1>
+
+          <p className="mt-3 text-xl text-indigo-100">
+            Select a Subject
+          </p>
+
+        </div>
 
       </div>
 
-      <div className="p-8">
+      <div className="max-w-7xl mx-auto px-8 py-12">
 
-        {/* Search */}
-        <input
-          type="text"
-          placeholder="Search Subject..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full md:w-96 mb-8 rounded-lg border p-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
+        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-8">
 
-        {loading && (
-          <div className="text-center text-lg font-semibold text-indigo-700">
-            Loading Subjects...
-          </div>
-        )}
+          {subjects?.map((subject) => (
 
-        {!loading && error && (
-          <div className="bg-red-100 border border-red-300 rounded-xl p-6">
-
-            <p className="text-red-700">{error}</p>
-
-            <button
-              onClick={loadSubjects}
-              className="mt-4 bg-red-600 text-white px-5 py-2 rounded-lg"
+            <Link
+              key={subject.id}
+              href={`/digital-library/${classId}/${subject.id}`}
             >
-              Retry
-            </button>
 
-          </div>
-        )}
+              <div className="bg-white rounded-3xl shadow-lg hover:shadow-2xl hover:-translate-y-1 transition p-8">
 
-        {!loading && !error && filteredSubjects.length === 0 && (
-          <div className="bg-white rounded-xl shadow p-10 text-center">
-
-            <h2 className="text-2xl font-bold">
-              No Subjects Found
-            </h2>
-
-            <p className="text-gray-500 mt-2">
-              Try another search or add subjects in the Admin Panel.
-            </p>
-
-          </div>
-        )}
-
-        {!loading && !error && filteredSubjects.length > 0 && (
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-
-            {filteredSubjects.map((subject) => (
-
-              <Link
-                key={subject.id}
-                href={`/digital-library/${classId}/${subject.id}`}
-              >
-                <div className="bg-white rounded-2xl shadow-lg p-8 hover:-translate-y-2 hover:shadow-2xl transition-all duration-300 cursor-pointer">
-
-                  <div className="text-6xl text-center mb-5">
-                    📖
-                  </div>
-
-                  <h2 className="text-xl font-bold text-center text-gray-800">
-                    {subject.name}
-                  </h2>
-
+                <div className="text-6xl">
+                  📚
                 </div>
-              </Link>
 
-            ))}
+                <h2 className="text-3xl font-bold mt-6">
+                  {subject.subject_name}
+                </h2>
 
-          </div>
+                <p className="text-slate-500 mt-3">
+                  Textbooks, Reference Books,
+                  Notes, Worksheets,
+                  Question Banks
+                </p>
 
-        )}
+                <button className="mt-8 w-full rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white py-3 font-semibold">
+                  Open Subject →
+                </button>
+
+              </div>
+
+            </Link>
+
+          ))}
+
+        </div>
 
       </div>
 

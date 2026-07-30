@@ -1,136 +1,118 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 
-type ClassItem = {
-  id: number;
-  name: string;
-};
+export default async function DigitalLibraryHome() {
+  const supabase = await createClient();
 
-export default function DigitalLibrary() {
-  const [classes, setClasses] = useState<ClassItem[]>([]);
-  const [filteredClasses, setFilteredClasses] = useState<ClassItem[]>([]);
-  const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const { data: classes } = await supabase
+    .from("classes")
+    .select("*")
+    .order("id");
 
-  useEffect(() => {
-    loadClasses();
-  }, []);
+  const { count: books } = await supabase
+    .from("books")
+    .select("*", { count: "exact", head: true });
 
-  useEffect(() => {
-    if (!search.trim()) {
-      setFilteredClasses(classes);
-      return;
-    }
+  const { count: chapters } = await supabase
+    .from("chapters")
+    .select("*", { count: "exact", head: true });
 
-    const filtered = classes.filter((cls) =>
-      cls.name.toLowerCase().includes(search.toLowerCase())
-    );
-
-    setFilteredClasses(filtered);
-  }, [search, classes]);
-
-  async function loadClasses() {
-    setLoading(true);
-    setError("");
-
-    const { data, error } = await supabase
-      .from("classes")
-      .select("id,name")
-      .order("id");
-
-    if (error) {
-      console.error(error);
-      setError("Unable to load classes.");
-      setLoading(false);
-      return;
-    }
-
-    setClasses(data || []);
-    setFilteredClasses(data || []);
-    setLoading(false);
-  }
+  const { count: resources } = await supabase
+    .from("resources")
+    .select("*", { count: "exact", head: true });
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-slate-100">
 
-      {/* Header */}
-      <div className="bg-indigo-700 text-white py-8 px-8 shadow">
-        <h1 className="text-4xl font-bold">📚 Digital Library</h1>
-        <p className="mt-2 text-indigo-100">
-          Access textbooks, worksheets, lesson plans and study resources.
-        </p>
+      {/* Hero */}
+
+      <div className="bg-gradient-to-r from-indigo-700 to-blue-700 text-white">
+
+        <div className="max-w-7xl mx-auto px-8 py-12">
+
+          <h1 className="text-5xl font-bold">
+            📚 TeacherMate Digital Library
+          </h1>
+
+          <p className="mt-4 text-xl text-indigo-100">
+            NCERT • Reference Books • Notes • Worksheets • Question Banks
+          </p>
+
+        </div>
+
       </div>
 
-      <div className="p-8">
+      {/* Statistics */}
 
-        {/* Search */}
-        <input
-          type="text"
-          placeholder="Search Class..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full md:w-96 mb-8 rounded-lg border p-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
+      <div className="max-w-7xl mx-auto grid md:grid-cols-4 gap-6 px-8 -mt-8">
 
-        {loading && (
-          <div className="text-center text-lg font-semibold text-indigo-700">
-            Loading Digital Library...
-          </div>
-        )}
+        <div className="bg-white rounded-2xl shadow p-6 text-center">
+          <div className="text-5xl">📘</div>
+          <h2 className="text-3xl font-bold mt-3">{books ?? 0}</h2>
+          <p className="text-slate-500">Books</p>
+        </div>
 
-        {!loading && error && (
-          <div className="bg-red-100 border border-red-300 rounded-xl p-6 text-red-700">
-            <p>{error}</p>
+        <div className="bg-white rounded-2xl shadow p-6 text-center">
+          <div className="text-5xl">📖</div>
+          <h2 className="text-3xl font-bold mt-3">{chapters ?? 0}</h2>
+          <p className="text-slate-500">Chapters</p>
+        </div>
 
-            <button
-              onClick={loadClasses}
-              className="mt-4 bg-red-600 text-white px-5 py-2 rounded-lg"
+        <div className="bg-white rounded-2xl shadow p-6 text-center">
+          <div className="text-5xl">📂</div>
+          <h2 className="text-3xl font-bold mt-3">{resources ?? 0}</h2>
+          <p className="text-slate-500">Resources</p>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow p-6 text-center">
+          <div className="text-5xl">🎓</div>
+          <h2 className="text-3xl font-bold mt-3">{classes?.length ?? 0}</h2>
+          <p className="text-slate-500">Classes</p>
+        </div>
+
+      </div>
+
+      {/* Classes */}
+
+      <div className="max-w-7xl mx-auto px-8 py-12">
+
+        <h2 className="text-3xl font-bold mb-8">
+          Select Class
+        </h2>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+
+          {classes?.map((cls) => (
+
+            <Link
+              key={cls.id}
+              href={`/digital-library/${cls.id}`}
             >
-              Retry
-            </button>
-          </div>
-        )}
 
-        {!loading && !error && filteredClasses.length === 0 && (
-          <div className="bg-white rounded-xl shadow p-10 text-center">
-            <h2 className="text-2xl font-bold">No Classes Found</h2>
-            <p className="text-gray-500 mt-2">
-              Try another search keyword.
-            </p>
-          </div>
-        )}
+              <div className="bg-white rounded-3xl shadow-lg hover:shadow-2xl hover:-translate-y-1 transition p-8 text-center">
 
-        {!loading && !error && filteredClasses.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-
-            {filteredClasses.map((cls) => (
-
-              <Link
-                key={cls.id}
-                href={`/digital-library/${cls.id}`}
-              >
-                <div className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 cursor-pointer">
-
-                  <div className="text-6xl mb-5 text-center">
-                    🎓
-                  </div>
-
-                  <h2 className="text-2xl font-bold text-center text-gray-800">
-                    {cls.name}
-                  </h2>
-
+                <div className="text-6xl mb-5">
+                  🎓
                 </div>
-              </Link>
 
-            ))}
+                <h3 className="text-3xl font-bold">
+                  {cls.class_name}
+                </h3>
 
-          </div>
-        )}
+                <button className="mt-8 w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl py-3 font-semibold">
+                  Open Library →
+                </button>
+
+              </div>
+
+            </Link>
+
+          ))}
+
+        </div>
+
       </div>
+
     </div>
   );
 }

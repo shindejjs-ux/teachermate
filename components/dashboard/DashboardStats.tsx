@@ -1,31 +1,76 @@
-import StatCard from "../ui/StatCard";
+import Card from "@/components/ui/Card";
+import {
+  Library,
+  BookOpen,
+  FolderOpen,
+  FileText,
+} from "lucide-react";
 
-export default function DashboardStats() {
+type Props = {
+  classes: number;
+  books: number;
+  chapters: number;
+  resources: number;
+};
+
+export default function DashboardStats({
+  classes,
+  books,
+  chapters,
+  resources,
+}: Props) {
+  const stats = [
+    {
+      title: "Classes",
+      value: classes,
+      icon: Library,
+      color: "text-blue-600",
+    },
+    {
+      title: "Books",
+      value: books,
+      icon: BookOpen,
+      color: "text-green-600",
+    },
+    {
+      title: "Chapters",
+      value: chapters,
+      icon: FolderOpen,
+      color: "text-orange-600",
+    },
+    {
+      title: "Resources",
+      value: resources,
+      icon: FileText,
+      color: "text-purple-600",
+    },
+  ];
+
   return (
+    <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+      {stats.map((item) => {
+        const Icon = item.icon;
 
-    <div className="grid md:grid-cols-4 gap-6 mt-8">
+        return (
+          <Card key={item.title}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-500">
+                  {item.title}
+                </p>
 
-      <StatCard
-        title="Lesson Plans"
-        value="128"
-      />
+                <h2 className="mt-2 text-4xl font-bold">
+                  {item.value}
+                </h2>
+              </div>
 
-      <StatCard
-        title="Worksheets"
-        value="64"
-      />
-
-      <StatCard
-        title="Question Papers"
-        value="18"
-      />
-
-      <StatCard
-        title="Resources"
-        value="320"
-      />
-
+              <Icon
+                className={`h-10 w-10 ${item.color}`}
+              />
+            </div>
+          </Card>
+        );
+      })}
     </div>
-
   );
 }

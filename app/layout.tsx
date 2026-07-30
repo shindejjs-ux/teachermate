@@ -1,39 +1,20 @@
 import "./globals.css";
-import Sidebar from "@/components/Sidebar";
-import Header from "@/components/Header";
-export const metadata = {
-  title: "TeacherMate AI",
-  description: "AI Powered Teaching Platform",
-};
+import type { Metadata } from "next";
 
+export const metadata = {
+  title: "TeacherMate - Digital Learning Platform",
+  description:
+    "TeacherMate by Dr. Jayesh Shinde - CBSE Mathematics resources, worksheets and learning materials.",
+  manifest: "/manifest.json",
+};
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
-    <html lang="en">
-      <body className="bg-slate-100">
-        <div className="flex min-h-screen">
-
-          {/* Sidebar */}
-          <Sidebar />
-
-          {/* Main Content */}
-          <div className="flex-1 ml-72 flex flex-col">
-
-            {/* Header */}
-            <Header />
-
-            {/* Page Content */}
-            <main className="flex-1 p-8 overflow-y-auto">
-              {children}
-            </main>
-
-          </div>
-
-        </div>
-      </body>
+    <html lang="en" suppressHydrationWarning>
+      <body>{children}</body>
     </html>
   );
 }

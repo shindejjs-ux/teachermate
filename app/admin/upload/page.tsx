@@ -13,7 +13,7 @@ export default function AdminUploadPage() {
 
       <div className="mt-6 rounded-lg border p-5">
         <p>
-          Digital Library content is working successfully.
+          digital library content is working successfully.
         </p>
 
         <p className="mt-2">
