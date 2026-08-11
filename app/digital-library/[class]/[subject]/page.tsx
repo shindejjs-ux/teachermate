@@ -1,151 +1,123 @@
-import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase-server";
 
-export default async function SubjectPage({
-  params,
-}: {
-  params: {
+type PageProps = {
+  params: Promise<{
     class: string;
     subject: string;
-  };
-}) {
+  }>;
+};
+
+export default async function SubjectPage({ params }: PageProps) {
   const supabase = await createClient();
 
-  const classId = Number(params.class);
-  const subjectId = Number(params.subject);
+  const resolvedParams = await params;
 
-  const { data: subject } = await supabase
+  const classId = Number(resolvedParams.class);
+  const subjectId = Number(resolvedParams.subject);
+
+  const { data: subject, error: subjectError } = await supabase
     .from("subjects")
     .select("*")
     .eq("id", subjectId)
-    .single();
+    .eq("class_id", classId)
+    .maybeSingle();
 
-  const { data: books } = await supabase
+  const { data: books, error: booksError } = await supabase
     .from("books")
     .select("*")
     .eq("class_id", classId)
     .eq("subject_id", subjectId)
     .order("title");
 
+  if (subjectError) {
+    console.error("Subject loading error:", subjectError);
+  }
+
+  if (booksError) {
+    console.error("Books loading error:", booksError);
+  }
+
   return (
-    <div className="min-h-screen bg-slate-100">
-      {/* Header */}
-
+    <div className="min-h-screen bg-slate-50">
       <div className="bg-gradient-to-r from-indigo-700 to-blue-700 text-white">
-
-        <div className="max-w-7xl mx-auto px-8 py-10">
-
+        <div className="mx-auto max-w-7xl px-6 py-10 md:px-8">
           <Link
             href={`/digital-library/${classId}`}
-            className="inline-block bg-white/20 hover:bg-white/30 px-5 py-2 rounded-lg mb-6"
+            className="inline-block rounded-lg bg-white/20 px-5 py-2 hover:bg-white/30"
           >
             ← Back
           </Link>
 
-          <h1 className="text-5xl font-bold">
-            {subject?.subject_name}
+          <h1 className="mt-8 text-4xl font-bold md:text-5xl">
+            {subject?.name ?? subject?.subject_name ?? "Subject"}
           </h1>
 
-          <p className="text-xl mt-3 text-indigo-100">
+          <p className="mt-3 text-xl text-indigo-100">
             Digital Library
           </p>
 
-          <div className="mt-6 inline-flex items-center gap-2 bg-white/20 px-5 py-2 rounded-full">
-            📚
-            <span>{books?.length || 0} Books Available</span>
+          <div className="mt-6 inline-flex items-center gap-2 rounded-full bg-white/20 px-5 py-2">
+            <span>📚</span>
+            <span>{books?.length ?? 0} Books Available</span>
           </div>
-
         </div>
-
       </div>
 
-      {/* Books */}
-
-      <div className="max-w-7xl mx-auto px-8 py-12">
-
+      <div className="mx-auto max-w-7xl px-6 py-12 md:px-8">
         {books && books.length > 0 ? (
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {books.map((book) => (
-
               <Link
                 key={book.id}
                 href={`/digital-library/${classId}/${subjectId}/${book.id}`}
               >
-                <div className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
-
-                  <div className="h-80 bg-slate-100 flex items-center justify-center">
-
-                    <Image
-                      src={`/covers/class${classId}/${book.cover_image || "default.jpg"}`}
-                      alt={book.title}
-                      width={190}
-                      height={260}
-                      className="object-contain"
-                    />
-
+                <div className="overflow-hidden rounded-3xl bg-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
+                  <div className="flex h-80 items-center justify-center bg-slate-100">
+                    <div className="text-8xl">📚</div>
                   </div>
 
                   <div className="p-6">
-
-                    <h2 className="text-xl font-bold line-clamp-2">
-                      {book.title}
+                    <h2 className="line-clamp-2 text-xl font-bold text-slate-800">
+                      {book.title ?? "Book"}
                     </h2>
 
-                    <p className="text-slate-500 mt-2">
+                    <p className="mt-2 text-slate-500">
                       {book.publisher || "Publisher"}
                     </p>
 
-                    <div className="flex justify-between items-center mt-5">
-
-                      <span className="bg-indigo-100 text-indigo-700 rounded-full px-3 py-1 text-sm">
+                    <div className="mt-5 flex items-center justify-between gap-3">
+                      <span className="rounded-full bg-indigo-100 px-3 py-1 text-sm text-indigo-700">
                         {book.book_type || "Textbook"}
                       </span>
 
                       <span className="text-sm text-slate-500">
                         {book.language || "English"}
                       </span>
-
                     </div>
 
-                    <button className="w-full mt-6 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl py-3 font-semibold transition">
-                      📖 Open Book
-                    </button>
-
+                    <div className="mt-6 w-full rounded-xl bg-indigo-600 py-3 text-center font-semibold text-white transition hover:bg-indigo-700">
+                      Open Book →
+                    </div>
                   </div>
-
                 </div>
-
               </Link>
-
             ))}
-
           </div>
-
         ) : (
+          <div className="rounded-2xl bg-white p-12 text-center shadow-lg">
+            <div className="mb-6 text-7xl">📚</div>
 
-          <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
-
-            <div className="text-7xl mb-6">
-              📚
-            </div>
-
-            <h2 className="text-3xl font-bold">
+            <h2 className="text-3xl font-bold text-slate-800">
               No Books Found
             </h2>
 
-            <p className="text-slate-500 mt-4">
+            <p className="mt-4 text-slate-500">
               Please add books from the Admin Panel.
             </p>
-
           </div>
-
         )}
-
       </div>
-
     </div>
   );
 }

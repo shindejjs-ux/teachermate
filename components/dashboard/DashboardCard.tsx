@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { LucideIcon, ArrowRight } from "lucide-react";
+import { ArrowRight, LucideIcon } from "lucide-react";
 
-type Props = {
+type DashboardCardProps = {
   title: string;
   value: string | number;
-  icon?: LucideIcon;
-  href?: string;
+  icon: LucideIcon;
+  href: string;
   color?: string;
 };
 
@@ -14,45 +14,41 @@ export default function DashboardCard({
   value,
   icon: Icon,
   href,
-  color = "bg-blue-600",
-}: Props) {
-  const card = (
-    <div className="rounded-xl bg-white border border-slate-200 p-6 shadow-sm hover:shadow-lg transition-all duration-200 cursor-pointer">
+  color = "bg-indigo-600",
+}: DashboardCardProps) {
+  return (
+    <Link
+      href={href}
+      className="group block overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+    >
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm font-medium text-slate-500">
+          <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
             {title}
           </p>
 
-          <h2 className="mt-3 text-4xl font-bold text-slate-800">
+          <h2 className="mt-4 text-4xl font-bold text-slate-900">
             {value}
           </h2>
         </div>
 
-        {Icon && (
-          <div
-            className={`flex h-12 w-12 items-center justify-center rounded-xl text-white ${color}`}
-          >
-            <Icon size={24} />
-          </div>
-        )}
+        <div
+          className={`flex h-14 w-14 items-center justify-center rounded-2xl text-white shadow-md ${color}`}
+        >
+          <Icon size={28} />
+        </div>
       </div>
 
-      {href && (
-        <div className="mt-6 flex items-center justify-end text-blue-600">
-          <span className="mr-2 text-sm font-medium">
-            View
-          </span>
+      <div className="mt-8 flex items-center justify-between border-t border-slate-100 pt-4">
+        <span className="text-sm font-medium text-indigo-600">
+          Open Module
+        </span>
 
-          <ArrowRight size={18} />
-        </div>
-      )}
-    </div>
+        <ArrowRight
+          size={18}
+          className="text-indigo-600 transition-transform duration-300 group-hover:translate-x-1"
+        />
+      </div>
+    </Link>
   );
-
-  if (href) {
-    return <Link href={href}>{card}</Link>;
-  }
-
-  return card;
 }

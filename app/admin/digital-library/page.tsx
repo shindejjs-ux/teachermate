@@ -6,13 +6,13 @@ export default async function DigitalLibraryPage() {
 
   const { data: classes } = await supabase
     .from("classes")
-    .select("id,class_name")
+    .select("id,name")
     .order("id");
 
   return (
     <div className="min-h-screen bg-slate-100">
 
-      <div className="bg-gradient-to-r from-indigo-700 to-blue-700 text-white py-12">
+      <div className="bg-linear-to-r from-indigo-700 to-blue-700 text-white py-12">
         <div className="max-w-7xl mx-auto px-8">
           <h1 className="text-5xl font-bold">
             📚 Digital Library
@@ -42,7 +42,7 @@ export default async function DigitalLibraryPage() {
                 </div>
 
                 <h2 className="text-2xl font-bold text-center mt-6">
-                  {cls.class_name}
+                  {cls.name}
                 </h2>
 
                 <button className="w-full mt-8 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl py-3 font-semibold">

@@ -1,13 +1,15 @@
 import { Suspense } from "react";
-
-// Fallback inline PDF viewer placeholder to avoid missing module import.
-const PdfViewerClient = () => {
-  return <div className="p-6">PDF Viewer unavailable.</div>;
-};
+import PdfViewerClient from "../../components/pdfs/PdfViewerClient";
 
 export default function PdfViewerPage() {
   return (
-    <Suspense fallback={<div className="p-6">Loading PDF Viewer...</div>}>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="text-lg font-medium">Loading PDF...</div>
+        </div>
+      }
+    >
       <PdfViewerClient />
     </Suspense>
   );

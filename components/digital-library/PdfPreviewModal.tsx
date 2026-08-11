@@ -15,6 +15,9 @@ export default function PdfPreviewModal({
 }: Props) {
   if (!open) return null;
 
+  console.log("Original URL:", url);
+  console.log("Preview URL:", getPreviewUrl(url));
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
       <div className="flex h-[90vh] w-[95vw] flex-col rounded-xl bg-white shadow-2xl">
