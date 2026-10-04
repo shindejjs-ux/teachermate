@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase-browser";
 
 type Stats = {
@@ -20,58 +21,88 @@ export default function Dashboard() {
     resources: 0,
   });
 
+  const [name, setName] = useState("Teacher");
+  const [role, setRole] = useState("teacher");
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    loadStats();
+    async function loadDashboard() {
+      const { data } = await supabase.auth.getUser();
+
+      setName(data.user?.user_metadata?.full_name || data.user?.email?.split("@")[0] || "Teacher");
+      setRole(data.user?.user_metadata?.role || "teacher");
+
+      const results = await Promise.all([
+        supabase.from("classes").select("*", { count: "exact", head: true }),
+        supabase.from("subjects").select("*", { count: "exact", head: true }),
+        supabase.from("books").select("*", { count: "exact", head: true }),
+        supabase.from("chapters").select("*", { count: "exact", head: true }),
+        supabase.from("resources").select("*", { count: "exact", head: true }),
+      ]);
+
+      setStats({
+        classes: results[0].count || 0,
+        subjects: results[1].count || 0,
+        books: results[2].count || 0,
+        chapters: results[3].count || 0,
+        resources: results[4].count || 0,
+      });
+
+      setLoading(false);
+    }
+
+    loadDashboard();
   }, []);
 
-  async function loadStats() {
-    const [
-      classes,
-      subjects,
-      books,
-      chapters,
-      resources,
-    ] = await Promise.all([
-      supabase.from("classes").select("*", { count: "exact", head: true }),
-      supabase.from("subjects").select("*", { count: "exact", head: true }),
-      supabase.from("books").select("*", { count: "exact", head: true }),
-      supabase.from("chapters").select("*", { count: "exact", head: true }),
-      supabase.from("resources").select("*", { count: "exact", head: true }),
-    ]);
-
-    setStats({
-      classes: classes.count || 0,
-      subjects: subjects.count || 0,
-      books: books.count || 0,
-      chapters: chapters.count || 0,
-      resources: resources.count || 0,
-    });
-  }
-
   const cards = [
-    { title: "Classes", value: stats.classes, icon: "🏫" },
-    { title: "Subjects", value: stats.subjects, icon: "📘" },
-    { title: "Books", value: stats.books, icon: "📚" },
-    { title: "Chapters", value: stats.chapters, icon: "📖" },
-    { title: "Resources", value: stats.resources, icon: "📂" },
+    { title: "Classes", value: stats.classes },
+    { title: "Subjects", value: stats.subjects },
+    { title: "Books", value: stats.books },
+    { title: "Chapters", value: stats.chapters },
+    { title: "Resources", value: stats.resources },
   ];
 
   return (
     <div className="space-y-8">
-      <h1 className="text-4xl font-bold">TeacherMate Dashboard</h1>
+      <section>
+        <p className="text-sm font-semibold uppercase tracking-wider text-indigo-600">Teacher Workspace</p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+          Welcome, {name}
+        </h1>
+        <p className="mt-2 text-slate-500">
+          Your CBSE teaching workspace is ready.
+        </p>
+      </section>
 
-      <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-6">
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         {cards.map((card) => (
-          <div
-            key={card.title}
-            className="bg-white rounded-xl shadow p-6 text-center"
-          >
-            <div className="text-5xl">{card.icon}</div>
-            <div className="text-3xl font-bold mt-3">{card.value}</div>
-            <div className="text-gray-500 mt-2">{card.title}</div>
+          <div key={card.title} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <p className="text-sm text-slate-500">{card.title}</p>
+            <p className="mt-2 text-3xl font-bold text-slate-900">
+              {loading ? "—" : card.value}
+            </p>
           </div>
         ))}
-      </div>
+      </section>
+
+      <section className="grid gap-5 md:grid-cols-3">
+        <Link href="/digital-library" className="rounded-2xl border border-slate-200 bg-white p-6 transition hover:-translate-y-1 hover:shadow-lg">
+          <p className="font-semibold text-slate-900">Digital Library</p>
+          <p className="mt-2 text-sm text-slate-500">Browse books, chapters and teaching resources.</p>
+        </Link>
+
+        <Link href="/teacher" className="rounded-2xl border border-slate-200 bg-white p-6 transition hover:-translate-y-1 hover:shadow-lg">
+          <p className="font-semibold text-slate-900">Teaching Workspace</p>
+          <p className="mt-2 text-sm text-slate-500">Build lesson plans, worksheets and assessments.</p>
+        </Link>
+
+        {(role === "school_admin" || role === "super_admin") && (
+          <Link href="/admin" className="rounded-2xl border border-slate-200 bg-white p-6 transition hover:-translate-y-1 hover:shadow-lg">
+            <p className="font-semibold text-slate-900">Administration</p>
+            <p className="mt-2 text-sm text-slate-500">Manage your school's TeacherMate resources.</p>
+          </Link>
+        )}
+      </section>
     </div>
   );
 }
