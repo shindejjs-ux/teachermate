@@ -90,6 +90,12 @@ const menu = [
   },
 
   {
+    title: "Question Paper Generator",
+    href: "/exam-paper",
+    icon: FileQuestion,
+  },
+
+  {
     title: "Question Bank",
     href: "/admin/question-bank",
     icon: Brain,
