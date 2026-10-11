@@ -30,6 +30,13 @@ export default function AIToolsPage() {
       link: "/question-bank",
       icon: "🎯",
     },
+
+    {
+      title: "Question Paper Generator",
+      desc: "Build editable exam paper drafts and print them.",
+      link: "/exam-paper",
+      icon: "📑",
+    },
   ];
 
   return (
