@@ -13,7 +13,7 @@ export default function AIToolsPage() {
     {
       title: "Worksheet Generator",
       desc: "Create worksheets instantly.",
-      link: "/worksheets",
+      link: "/worksheet-generator",
       icon: "📄",
     },
 
