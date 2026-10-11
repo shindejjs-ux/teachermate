@@ -154,7 +154,7 @@ export default function Dashboard() {
         </Link>
 
         <Link
-          href="/teacher"
+          href="/lesson-planner"
           className="rounded-2xl border border-slate-200 bg-white p-6 transition hover:-translate-y-1 hover:shadow-lg"
         >
           <p className="font-semibold text-slate-900">Teaching Workspace</p>
