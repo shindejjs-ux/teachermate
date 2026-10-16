@@ -5,8 +5,18 @@ import LogoutButton from "./logout-button";
 export default async function DashboardLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  let user: { email?: string; user_metadata?: Record<string, unknown> } | null = null;
+  let authUnavailable = false;
+
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.auth.getUser();
+    if (error) throw error;
+    user = data.user;
+  } catch (error) {
+    authUnavailable = true;
+    console.error("Dashboard auth unavailable:", error);
+  }
 
   const role = String(user?.user_metadata?.role || "teacher")
     .replace("_", " ")
@@ -29,6 +39,11 @@ export default async function DashboardLayout({
         </div>
       </header>
 
+      {authUnavailable && (
+        <div role="alert" className="mx-auto mt-4 max-w-7xl rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Supabase is temporarily unavailable. Your pages can load, but sign-in and database features may not work until the service is restored.
+        </div>
+      )}
       <div className="mx-auto grid max-w-7xl lg:grid-cols-[230px_1fr]">
         <aside className="hidden min-h-[calc(100vh-73px)] border-r border-slate-200 bg-white p-4 lg:block">
           <nav className="space-y-1">
