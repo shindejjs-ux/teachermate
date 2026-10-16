@@ -5,7 +5,7 @@ import LogoutButton from "./logout-button";
 export default async function DashboardLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  let user: { email?: string; user_metadata?: Record<string, unknown> } | null = null;
+  let user: { email?: string; user_metadata?: Record<string, any> } | null = null;
   let authUnavailable = false;
 
   try {
